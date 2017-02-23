@@ -22,9 +22,9 @@ All the configs in the app make it ready to run on my tenant. Only config reqd i
 
 In the Native App:
 
-	**MainWindow.xaml.cs**: Checkout the ForceMFA method to understand how the client handles the claim param.
+**MainWindow.xaml.cs**: Checkout the ForceMFA method to understand how the client handles the claim param.
 
 In the Web Service:
 
-	**MFAController.cs**: Checkout the HTTP GET api endpoint to see how we initiate and handle the `interaction_required` error. 
+**MFAController.cs**: Checkout the HTTP GET api endpoint to see how we initiate and handle the `interaction_required` error. 
 
