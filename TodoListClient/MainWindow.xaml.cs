@@ -169,7 +169,7 @@ namespace TodoListClient
 
         private async void AddTodoItem(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(TodoText.Text))
+            if (string.IsNullOrEmpty(TodoText.Text) )
             {
                 MessageBox.Show("Please enter a value for the To Do item name");
                 return;
@@ -223,6 +223,68 @@ namespace TodoListClient
             {
                 TodoText.Text = "";
                 GetTodoList();
+            } else
+            {
+                MessageBox.Show("An error occurred : " + response.ReasonPhrase);
+            }
+        }
+
+        private async void ForceMFA(object sender, RoutedEventArgs e)
+        {
+
+            //
+            // Get an access token to call the To Do service.
+            //
+            AuthenticationResult result = null;
+            try
+            {
+                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+            }
+            catch (AdalException ex)
+            {
+                // There is no access token in the cache, so prompt the user to sign-in.
+                if (ex.ErrorCode == "user_interaction_required")
+                {
+                    MessageBox.Show("Please sign in first");
+                    SignInButton.Content = "Sign In";
+                }
+                else
+                {
+                    // An unexpected error occurred.
+                    string message = ex.Message;
+                    if (ex.InnerException != null)
+                    {
+                        message += "Inner Exception : " + ex.InnerException.Message;
+                    }
+
+                    MessageBox.Show(message);
+                }
+
+                return;
+            }
+
+            //
+            // Call the To Do service.
+            //
+
+            // Once the token has been returned by ADAL, add it to the http authorization header, before making the call to access the To Do service.
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+
+            // Forms encode Todo item, to POST to the todo list web api.
+            // HttpContent content = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("Title", TodoText.Text) });
+
+            // Call the To Do list service.
+            HttpResponseMessage response = await httpClient.GetAsync(todoListBaseAddress + "/api/MFA");
+
+            if (response.IsSuccessStatusCode)
+            {
+                MessageBox.Show("User has already signed in with MFA.");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest && response.ReasonPhrase == "interaction_required")
+            {
+                String claimsParam = await response.Content.ReadAsStringAsync();
+                SignInCA(claimsParam);
+
             }
             else
             {
@@ -275,6 +337,52 @@ namespace TodoListClient
             }
 
         }
+
+        private async void SignInCA(String claims)
+        {
+            // If there is already a token in the cache, clear the cache and update the label on the button.
+            if (SignInButton.Content.ToString() == "Clear Cache")
+            {
+                TodoList.ItemsSource = string.Empty;
+                authContext.TokenCache.Clear();
+                // Also clear cookies from the browser control.
+                ClearCookies();
+                SignInButton.Content = "Sign In";
+            }
+
+            //
+            // Get an access token to call the To Do list service w/ CA.
+            //
+            AuthenticationResult result = null;
+            try
+            {
+                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Always), UserIdentifier.AnyUser, "claims="+claims);
+                SignInButton.Content = "Clear Cache";
+                GetTodoList();
+            }
+            catch (AdalException ex)
+            {
+                if (ex.ErrorCode == "authentication_canceled")
+                {
+                    MessageBox.Show("Sign in was canceled by the user");
+                }
+                else
+                {
+                    // An unexpected error occurred.
+                    string message = ex.Message;
+                    if (ex.InnerException != null)
+                    {
+                        message += "Inner Exception : " + ex.InnerException.Message;
+                    }
+
+                    MessageBox.Show(message);
+                }
+
+                return;
+            }
+
+        }
+
 
         // This function clears cookies from the browser control used by ADAL.
         private void ClearCookies()
