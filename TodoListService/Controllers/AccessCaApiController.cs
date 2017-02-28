@@ -21,7 +21,7 @@ using TodoListService.DAL;
 namespace TodoListService.Controllers
 {
     [Authorize]
-    public class MFAController : ApiController
+    public class AccessCaApiController : ApiController
     {
         //
         // The Client ID is used by the application to uniquely identify itself to Azure AD.
@@ -52,45 +52,10 @@ namespace TodoListService.Controllers
                 throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'user_impersonation' or scope claim not found" });
             }
 
-            AdalException doesReqCa = await CallConditionalAccessAPIOnBehalfOfUser();
-            // Checks if we need to do handle CA claims param and pass back to the client 
-            if (doesReqCa != null)
-            {
-                String claims = null;
-                String error = null;
-
-                // Extracts the error and claims data from ugly JSON 
-                String temp = doesReqCa.InnerException.InnerException.Message;
-                var output = JsonConvert.DeserializeObject(temp);
-
-                foreach (var x in (JObject)output)
-                {
-                    String jvalue = x.Key;
-                    if (jvalue == "claims")
-                    {
-                        claims = x.Value.ToString();
-                    }
-                    if (jvalue == "error")
-                    {
-                        error = x.Value.ToString();
-                    }
-                }
-
-                HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.BadRequest, ReasonPhrase = error, Content = new StringContent(claims) };
-                throw new HttpResponseException(myMessage);
-            }
-
-            return;
-        }
-
-        public static async Task<AdalException> CallConditionalAccessAPIOnBehalfOfUser()
-        {
-            UserProfile profile = null;
-            string accessToken = null;
             AuthenticationResult result = null;
 
             //
-            // Use ADAL to get a token On Behalf Of the current user.  To do this we will need:
+            //   Use ADAL to get a token On Behalf Of the current user.  To do this we will need:
             //      The Resource ID of the service we want to call.
             //      The current user's access token, from the current request's authorization header.
             //      The credentials of this application.
@@ -117,15 +82,37 @@ namespace TodoListService.Controllers
                 try
                 {
                     result = await authContext.AcquireTokenAsync(caResourceId, clientCred, userAssertion);
-                    accessToken = result.AccessToken;
                 }
                 catch (AdalServiceException ex)
                 {
                     if (ex.ErrorCode == "interaction_required")
                     {
-                        // MFA/CA Claims Reqd
-                        Console.WriteLine("MFA reqd: " + ex.ErrorCode);
-                        return (ex);
+                        String claims = null;
+                        String error = null;
+
+                        // Extracts the error and claims data from exception JSON 
+                        String temp = ex.InnerException.InnerException.Message;
+                        var output = JsonConvert.DeserializeObject(temp);
+
+                        foreach (var x in (JObject)output)
+                        {
+                            String jvalue = x.Key;
+                            if (jvalue == "claims")
+                            {
+                                claims = x.Value.ToString();
+                            }
+                            if (jvalue == "error")
+                            {
+                                error = x.Value.ToString();
+                            }
+                        }
+
+                        // Clear the token cache 
+                        authContext.TokenCache.Clear();
+
+                        HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.BadRequest, ReasonPhrase = error, Content = new StringContent(claims) };
+
+                        throw new HttpResponseException(myMessage);
                     }
                 }
                 catch (AdalException ex)
@@ -140,7 +127,19 @@ namespace TodoListService.Controllers
                 }
             } while ((retry == true) && (retryCount < 1));
 
-            return (null);
+            // Access token is available in result; 
+            String oboAccessToken = result.AccessToken;
+
+            //
+            // We can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+            // Use thie code below to call the downstream Web API OBO
+            //
+
+            // private HttpClient httpClient = new HttpClient();
+            // httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+            // HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
+
+            return;
         }
     }
 }

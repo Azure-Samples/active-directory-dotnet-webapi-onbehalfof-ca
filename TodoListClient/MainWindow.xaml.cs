@@ -76,7 +76,7 @@ namespace TodoListClient
             InitializeLogin();
         }
 
-        private async void InitializeLogin()
+        private async Task InitializeLogin()
         {
             //
             // As the application starts, try to get an access token without prompting the user.  If one exists, populate the To Do list.  If not, continue.
@@ -85,7 +85,8 @@ namespace TodoListClient
             AuthenticationResult result = null;
             try
             {
-                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                // result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                result = await authContext.AcquireTokenSilentAsync(todoListResourceId, clientId);
 
                 // A valid token is in the cache - get the To Do list.
                 SignInButton.Content = "Clear Cache";
@@ -93,7 +94,7 @@ namespace TodoListClient
             }
             catch (AdalException ex)
             {
-                if (ex.ErrorCode == "user_interaction_required")
+                if (ex.ErrorCode == "failed_to_acquire_token_silently")
                 {
                     // There are no tokens in the cache.  Proceed without calling the To Do list service.
                 }
@@ -111,7 +112,7 @@ namespace TodoListClient
             }
         }
 
-        private async void GetTodoList()
+        private async Task GetTodoList()
         {
             //
             // Get an access token to call the To Do service.
@@ -119,12 +120,13 @@ namespace TodoListClient
             AuthenticationResult result = null;
             try
             {
-                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                // result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                result = await authContext.AcquireTokenSilentAsync(todoListResourceId, clientId);
             }
             catch (AdalException ex)
             {
                 // There is no access token in the cache, so prompt the user to sign-in.
-                if (ex.ErrorCode == "user_interaction_required")
+                if (ex.ErrorCode == "failed_to_acquire_token_silently")
                 {
                     MessageBox.Show("Please sign in first");
                     SignInButton.Content = "Sign In";
@@ -181,12 +183,13 @@ namespace TodoListClient
             AuthenticationResult result = null;
             try
             {
-                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                // result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                result = await authContext.AcquireTokenSilentAsync(todoListResourceId, clientId);
             }
             catch (AdalException ex)
             {
                 // There is no access token in the cache, so prompt the user to sign-in.
-                if (ex.ErrorCode == "user_interaction_required")
+                if (ex.ErrorCode == "failed_to_acquire_token_silently")
                 {
                     MessageBox.Show("Please sign in first");
                     SignInButton.Content = "Sign In";
@@ -229,21 +232,23 @@ namespace TodoListClient
             }
         }
 
-        private async void ForceMFA(object sender, RoutedEventArgs e)
+        private async void AccessCAWebAPI(object sender, RoutedEventArgs e)
         {
 
             //
             // Get an access token to call the To Do service.
             //
             AuthenticationResult result = null;
+
             try
             {
-                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                // result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                result = await authContext.AcquireTokenSilentAsync(todoListResourceId, clientId);
             }
             catch (AdalException ex)
             {
                 // There is no access token in the cache, so prompt the user to sign-in.
-                if (ex.ErrorCode == "user_interaction_required")
+                if (ex.ErrorCode == "failed_to_acquire_token_silently")
                 {
                     MessageBox.Show("Please sign in first");
                     SignInButton.Content = "Sign In";
@@ -264,27 +269,68 @@ namespace TodoListClient
             }
 
             //
-            // Call the To Do service.
+            // Call the To Do service. We may get a claims challenge and need to redo the auth
             //
 
             // Once the token has been returned by ADAL, add it to the http authorization header, before making the call to access the To Do service.
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
 
-            // Forms encode Todo item, to POST to the todo list web api.
-            // HttpContent content = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("Title", TodoText.Text) });
-
             // Call the To Do list service.
-            HttpResponseMessage response = await httpClient.GetAsync(todoListBaseAddress + "/api/MFA");
+            HttpResponseMessage response = await httpClient.GetAsync(todoListBaseAddress + "/api/AccessCaApi");
 
             if (response.IsSuccessStatusCode)
             {
-                MessageBox.Show("User has already signed in with MFA.");
+                // User's token has already had an interactive auth with CA Policy 
+                // Call to our api was successful 
+                MessageBox.Show("Successfully called CA protected Web API");
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest && response.ReasonPhrase == "interaction_required")
             {
+                // We need to steup the token to account for a Conditional Access Policy
                 String claimsParam = await response.Content.ReadAsStringAsync();
-                SignInCA(claimsParam);
 
+                await SignInCA(claimsParam);
+
+                try
+                {
+                    // Stepped up Access Token is in the cache
+                    // result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Never));
+                    result = await authContext.AcquireTokenSilentAsync(todoListResourceId, clientId);
+                }
+                catch (AdalException ex)
+                {
+                    // There is no access token in the cache
+                    if (ex.ErrorCode == "failed_to_acquire_token_silently")
+                    {
+                        MessageBox.Show("Please sign in first");
+                    }
+                    else
+                    {
+                        // An unexpected error occurred.
+                        string message = ex.Message;
+                        if (ex.InnerException != null)
+                        {
+                            message += "Inner Exception : " + ex.InnerException.Message;
+                        }
+
+                        MessageBox.Show(message);
+                    }
+
+                    return;
+                }
+
+                // Valid Access token in result, call our api w/ new token 
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                HttpResponseMessage responseCA = await httpClient.GetAsync(todoListBaseAddress + "/api/AccessCaApi");
+
+                if (responseCA.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Successfully called CA Protected Web API");
+                }
+                else
+                {
+                    MessageBox.Show("Problem calling Web API HTTP " + response.StatusCode);
+                }
             }
             else
             {
@@ -338,13 +384,14 @@ namespace TodoListClient
 
         }
 
-        private async void SignInCA(String claims)
+        private async Task SignInCA(String claims)
         {
             // If there is already a token in the cache, clear the cache and update the label on the button.
             if (SignInButton.Content.ToString() == "Clear Cache")
             {
                 TodoList.ItemsSource = string.Empty;
                 authContext.TokenCache.Clear();
+
                 // Also clear cookies from the browser control.
                 ClearCookies();
                 SignInButton.Content = "Sign In";
@@ -377,7 +424,6 @@ namespace TodoListClient
 
                     MessageBox.Show(message);
                 }
-
                 return;
             }
 
