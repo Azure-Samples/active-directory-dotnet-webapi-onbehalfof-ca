@@ -6,15 +6,19 @@ author: dadobali
 
 # .NET Native App Accessing Web API with downstream CA-Protected Web API
 
+## About this Sample 
+
 In this sample, a native client calls a web API, and then the web API calls another downstream conditional access protected web API after obtaining a token to act on behalf of the original user.  The sample uses the Active Directory Authentication Library (ADAL) in the native client to obtain a token for the user to call the first web API, and also in the first web API to get a token to act on behalf of the user to call the second web API.  Both flows use the oAuth 2.0 protocol obtain the tokens.  
 
 For more information about how the protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](http://go.microsoft.com/fwlink/?LinkId=394414).
 
 > Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
 
+## Topology 
+
 This sample has 3 components:
 
-**Native App**: Simple Windows Desktop ToDo List app that allows sign in, force MFA, and add a new task.  Once a user is signed in, the app exposes two options.  When you hit **force MFA**, the client app calls Web API 1 to do an on-behalf-of flow to a CA-Protected downstream Web API 2.  The service returns an error that has to be passed back to the client and handled properly. When you **add a ToDo item**, the Web API 1 will do On-Behalf-Of to the Microsoft Graph rather than the CA-protected api. 
+**Native App**: Simple Windows Desktop ToDo List app that allows sign in, force MFA, and add a new task.  Once a user is signed in, the app exposes two options.  When you hit **force MFA**, the client app calls Web API 1 to do an on-behalf-of flow to a CA-Protected downstream Web API 2.  The service returns an error that has to be passed back to the client and handled properly. When you select **add ToDo item**, the Web API 1 will do On-Behalf-Of to the Microsoft Graph rather than the CA-protected api. 
 
 **Web API 1**: Service that Native app sends requests to and requires authorization via OWIN framework.  Then will perform OBO to Web API 2 if forcing MFA or OBO to the Microsoft Graph if adding a new ToDo item.
 
@@ -27,6 +31,7 @@ To run this sample you will need:
 - An Internet connection
 - An Azure Active Directory (Azure AD) tenant. For more information on how to get an Azure AD tenant, please see [How to get an Azure AD tenant](https://azure.microsoft.com/en-us/documentation/articles/active-directory-howto-tenant/) 
 - A user account in your Azure AD tenant. This sample will not work with a Microsoft account, so if you signed in to the Azure portal with a Microsoft account and have never created a user account in your directory before, you need to do that now.
+- A premium subscription to Azure AD.  Azure AD Conditional Access requires a premium subscription.  Azure AD offers a [one month free trial](https://azure.microsoft.com/en-us/trial/get-started-active-directory/) you can use for this sample.  
 
 ### Step 1: Clone or download the code
 
@@ -97,8 +102,6 @@ For the middle tier web API to be able to call the downstream web API, the user 
 6. Find the app key `todo:TodoListBaseAddress` and replace the value with the base address of the TodoListService project.
 
 ### Step 4: Create and link a Conditional Access Policy
-
-Azure AD Conditional Access requires a premium subscription.  Azure AD offers a [one month free trial](https://azure.microsoft.com/en-us/trial/get-started-active-directory/) you can use for this sample.  
 
 1. Inside the **Azure Active Directory** blade, select the **Conditional access** button near the bottom of the list. 
 2. Go ahead and select **Add** and name your policy.
