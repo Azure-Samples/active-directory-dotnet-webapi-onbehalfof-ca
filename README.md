@@ -1,7 +1,7 @@
 ---
-services: active-directory, conditional access
-platforms: .NET
-author: dadobali
+services: active-directory
+platforms: dotnet
+author: danieldobalian
 ---
 
 # .NET Native App Accessing Web API with downstream CA-Protected Web API
