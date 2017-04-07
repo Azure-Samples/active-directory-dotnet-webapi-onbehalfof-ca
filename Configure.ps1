@@ -44,24 +44,26 @@ Function ReplaceSetting([string] $configFilePath, [string] $key, [string] $newVa
    $content.save($configFilePath)
 }
 
-
-
-
 # Updates the config file for a client application
-Function UpdateSampleConfigFile([string] $configFilePath, [string] $tenantId, [string] $clientId, [string] $appKey, [string] $baseAddress)
-{
-    ReplaceSetting -configFilePath $configFilePath -key "ida:Tenant" -newValue $tenantId
-    ReplaceSetting -configFilePath $configFilePath -key "ida:ClientId" -newValue $clientId
-    ReplaceSetting -configFilePath $configFilePath -key "ida:AppKey" -newValue $appKey
-    ReplaceSetting -configFilePath $configFilePath -key "ida:PostLogoutRedirectUri" -newValue $baseAddress
-}
-
-# Updates the config file for a client application
-Function UpdateServiceConfigFile([string] $configFilePath, [string] $tenantId, [string] $audience)
+Function UpdateTodoListServiceConfigFile([string] $configFilePath, [string] $tenantId, [string] $clientId, [string] $appKey, [string] $audience, [string] $protectedResource)
 {
     ReplaceSetting -configFilePath $configFilePath -key "ida:Tenant" -newValue $tenantId
     ReplaceSetting -configFilePath $configFilePath -key "ida:Audience" -newValue $audience
+    ReplaceSetting -configFilePath $configFilePath -key "ida:ClientID" -newValue $clientId
+    ReplaceSetting -configFilePath $configFilePath -key "ida:AppKey" -newValue $appKey
+    ReplaceSetting -configFilePath $configFilePath -key "ida:CAProtectedResource" -newValue $protectedResource
 }
+
+# Updates the config file for a client application
+Function UpdateTodoListClientConfigFile([string] $configFilePath, [string] $tenantId, [string] $clientId, [string] $redirectUri, [string] $resourceId, [string] $baseAddress)
+{
+    ReplaceSetting -configFilePath $configFilePath -key "ida:Tenant" -newValue $tenantId
+    ReplaceSetting -configFilePath $configFilePath -key "ida:ClientId" -newValue $clientId
+    ReplaceSetting -configFilePath $configFilePath -key "ida:RedirectUri" -newValue $redirectUri
+    ReplaceSetting -configFilePath $configFilePath -key "todo:TodoListResourceId" -newValue $resourceId
+    ReplaceSetting -configFilePath $configFilePath -key "todo:TodoListBaseAddress" -newValue $baseAddress
+}
+
 
 # Adds the requiredAccesses (expressed as a pipe separated string) to the requiredAccess structure
 # The exposed permissions are in the $exposedPermissions collection, and the type of permission (Scope | Role) is 
@@ -254,14 +256,24 @@ so that they are consistent with the Applications parameters
     Set-AzureADApplication -ObjectId $todoListServiceWebApiAadApplication.ObjectId -KnownClientApplications $todoListClientAadApplication.AppId
 	Write-Host "Configured."
  
-    # Update the config file in the application
+    # Update the config files in the application
     $configFile = $pwd.Path + "\TodoListService\Web.Config"
     Write-Host "Updating the sample code ($configFile)"
-    UpdateSampleConfigFile  -configFilePath $configFile `
+    UpdateTodoListServiceConfigFile -configFilePath $configFile `
                             -clientId $todoListServiceWebApiAadApplication.AppId `
                             -appKey $appKey `
                             -tenantId $tenantId `
-                            -baseAddress $todoListServiceWebApiBaseUrl
+                            -audience $todoListServiceWebApiAppIdURI `
+	                        -protectedResource $downstreamWebApiAadApplication.AppId
+
+    $configFile = $pwd.Path + "\TodoListClient\App.Config"
+    Write-Host "Updating the sample code ($configFile)"
+    UpdateTodoListClientConfigFile -configFilePath $configFile `
+                            -clientId $todoListClientAadApplication.AppId `
+                            -tenantId $tenantId `
+                            -redirectUri $todoListClientRedirectUri `
+                            -baseAddress $todoListServiceWebApiBaseUrl `
+	                        -resourceId $todoListServiceWebApiAppIdURI.AppId
 
     # Update the Startup.Auth.cs file to enable a single-tenant application
 #    $file = "$pwd\WebApp-RoleClaims-DotNet\App_Start\Startup.Auth.cs"
