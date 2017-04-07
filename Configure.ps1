@@ -273,12 +273,10 @@ so that they are consistent with the Applications parameters
                             -tenantId $tenantId `
                             -redirectUri $todoListClientRedirectUri `
                             -baseAddress $todoListServiceWebApiBaseUrl `
-	                        -resourceId $todoListServiceWebApiAppIdURI.AppId
+	                        -resourceId $todoListServiceWebApiAadApplication.AppId
 
-    # Update the Startup.Auth.cs file to enable a single-tenant application
-#    $file = "$pwd\WebApp-RoleClaims-DotNet\App_Start\Startup.Auth.cs"
-#    Write-Host "Updating the code to run as a single tenant application: '"$file"''"
-#    UnCommentSingleTenantAppConditionalDirective $file
+
+	Write-Host "REMEMBER: You still need to Create and link a Conditional Access Policy in the Azure portal. See https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca" -foregroundcolor "Cyan"
 
     # Completes
     Write-Host "Done."
