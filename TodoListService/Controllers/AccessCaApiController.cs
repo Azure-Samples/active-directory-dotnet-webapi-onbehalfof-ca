@@ -39,10 +39,12 @@ namespace TodoListService.Controllers
         // To authenticate to the Graph API, the app needs to know the Grah API's App ID URI.
         // To contact the Me endpoint on the Graph API we need the URL as well.
         //
-        private static string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
-        private static string graphUserUrl = ConfigurationManager.AppSettings["ida:GraphUserUrl"];
         private static string caResourceId = ConfigurationManager.AppSettings["ida:CAProtectedResource"];
-        private const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
+
+        // Error Constants
+        const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
+        const String INTERACTION_REQUIRED = "interaction_required";
+
 
         // GET: api/ConditionalAccess
         public async Task Get()
@@ -85,7 +87,7 @@ namespace TodoListService.Controllers
                 }
                 catch (AdalServiceException ex)
                 {
-                    if (ex.ErrorCode == "interaction_required")
+                    if (ex.ErrorCode == INTERACTION_REQUIRED)
                     {
                         String claims = null;
                         String error = null;
@@ -117,7 +119,7 @@ namespace TodoListService.Controllers
                 }
                 catch (AdalException ex)
                 {
-                    if (ex.ErrorCode == "temporarily_unavailable")
+                    if (ex.ErrorCode == SERVICE_UNAVAILABLE)
                     {
                         // Transient error, OK to retry.
                         retry = true;
@@ -132,9 +134,10 @@ namespace TodoListService.Controllers
 
             //
             // We can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
-            // Use thie code below to call the downstream Web API OBO
+            // Use this code below to call the downstream Web API OBO
             //
 
+            // e.g.
             // private HttpClient httpClient = new HttpClient();
             // httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             // HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
