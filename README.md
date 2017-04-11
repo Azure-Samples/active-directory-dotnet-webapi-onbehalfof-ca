@@ -12,7 +12,7 @@ The sample uses the Active Directory Authentication Library (ADAL) in a native c
 
 This sample is intended to explore the implications of using the On-Behalf-Of flow with Conditional Access. We'll walk through code changes necessary to build an app that supports Conditional Access. Quite simply, Azure AD will return state to the web service that needs to hand this back to the client. The client can then use this state to prompt the end-user to satisfy the downstream Conditional Access policy. 
 
-For more information about how the protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](http://go.microsoft.com/fwlink/?LinkId=394414).
+For more information about how the protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](http://go.microsoft.com/fwlink/?LinkId=394414).  To learn more about Conditional Access, checkout [Conditional Access in Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/active-directory-conditional-access).  
 
 > Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
 
