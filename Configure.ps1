@@ -211,7 +211,7 @@ so that they are consistent with the Applications parameters
                                              -IdentifierUris $downstreamWebApiAppIdURI `
                                              -PasswordCredentials $key `
                                              -PublicClient $downstreamWebApiIsPublicClient
-	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId
+	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
 	# Create the TodoListService Active Directory Application and it's service principal
