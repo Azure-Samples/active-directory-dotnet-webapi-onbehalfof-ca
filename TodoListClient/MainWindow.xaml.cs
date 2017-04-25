@@ -298,7 +298,7 @@ namespace TodoListClient
                     return; 
                 }
 
-                await SignInCA(claimsParam);
+                await SignInCA(claimsParam, result.UserInfo.DisplayableId);
 
                 try
                 {
@@ -393,7 +393,7 @@ namespace TodoListClient
 
         }
 
-        private async Task SignInCA(String claims)
+        private async Task SignInCA(String claims, string displayName)
         {
             // If there is already a token in the cache, clear the cache and update the label on the button.
             if (SignInButton.Content.ToString() == "Clear Cache")
@@ -412,7 +412,8 @@ namespace TodoListClient
             AuthenticationResult result = null;
             try
             {
-                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Always), UserIdentifier.AnyUser, "claims="+claims);
+                result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Always), 
+                    new UserIdentifier(displayName, UserIdentifierType.OptionalDisplayableId), "claims="+claims);
 
                 /* Update UI */
                 SignInButton.Content = "Clear Cache";
