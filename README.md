@@ -1,7 +1,7 @@
 ---
 services: active-directory
 platforms: dotnet
-author: danieldobalian
+author: jmprieur
 ---
 
 # .NET Native App accessing Web Service that calls a downstream Web API with Conditional Access 
