@@ -211,7 +211,7 @@ so that they are consistent with the Applications parameters
                                              -IdentifierUris $downstreamWebApiAppIdURI `
                                              -PasswordCredentials $key `
                                              -PublicClient $downstreamWebApiIsPublicClient
-	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId
+	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
 	# Create the TodoListService Active Directory Application and it's service principal
@@ -257,7 +257,7 @@ so that they are consistent with the Applications parameters
 	Write-Host "Configured."
  
     # Update the config files in the application
-    $configFile = $pwd.Path + "\TodoListService\Web.Config"
+    $configFile = $pwd.Path + "\..\TodoListService\Web.Config"
     Write-Host "Updating the sample code ($configFile)"
     UpdateTodoListServiceConfigFile -configFilePath $configFile `
                             -clientId $todoListServiceWebApiAadApplication.AppId `
@@ -266,7 +266,7 @@ so that they are consistent with the Applications parameters
                             -audience $todoListServiceWebApiAppIdURI `
 	                        -protectedResource $downstreamWebApiAadApplication.AppId
 
-    $configFile = $pwd.Path + "\TodoListClient\App.Config"
+    $configFile = $pwd.Path + "\..\TodoListClient\App.Config"
     Write-Host "Updating the sample code ($configFile)"
     UpdateTodoListClientConfigFile -configFilePath $configFile `
                             -clientId $todoListClientAadApplication.AppId `

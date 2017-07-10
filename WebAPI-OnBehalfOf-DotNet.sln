@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.12
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListService", "TodoListService\TodoListService.csproj", "{047CDEF7-D5BA-4B1E-9748-910B610CCA51}"
 EndProject
@@ -9,9 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListClient", "TodoListC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automation", "Automation", "{E7698BE8-478F-4010-8ED7-FBE79C49B97C}"
 	ProjectSection(SolutionItems) = preProject
-		Cleanup.ps1 = Cleanup.ps1
-		Config.ps1 = Config.ps1
-		Configure.ps1 = Configure.ps1
+		AppCreationScripts\Cleanup.ps1 = AppCreationScripts\Cleanup.ps1
+		AppCreationScripts\Config.ps1 = AppCreationScripts\Config.ps1
+		AppCreationScripts\Configure.ps1 = AppCreationScripts\Configure.ps1
 	EndProjectSection
 EndProject
 Global
