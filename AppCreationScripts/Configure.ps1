@@ -262,18 +262,18 @@ so that they are consistent with the Applications parameters
     UpdateTodoListServiceConfigFile -configFilePath $configFile `
                             -clientId $todoListServiceWebApiAadApplication.AppId `
                             -appKey $appKey `
-                            -tenantId $tenantId `
+                            -tenantId $tenantName `
                             -audience $todoListServiceWebApiAppIdURI `
-	                        -protectedResource $downstreamWebApiAadApplication.AppId
+	                        -protectedResource $downstreamWebApiAppIdURI
 
     $configFile = $pwd.Path + "\..\TodoListClient\App.Config"
     Write-Host "Updating the sample code ($configFile)"
     UpdateTodoListClientConfigFile -configFilePath $configFile `
                             -clientId $todoListClientAadApplication.AppId `
-                            -tenantId $tenantId `
+                            -tenantId $tenantName `
                             -redirectUri $todoListClientRedirectUri `
                             -baseAddress $todoListServiceWebApiBaseUrl `
-	                        -resourceId $todoListServiceWebApiAadApplication.AppId
+	                        -resourceId $todoListServiceWebApiAppIdURI
 
 
 	Write-Host "REMEMBER: You still need to Create and link a Conditional Access Policy in the Azure portal. See https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca" -foregroundcolor "Cyan"
