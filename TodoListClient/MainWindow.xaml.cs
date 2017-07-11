@@ -79,8 +79,7 @@ namespace TodoListClient
         public MainWindow()
         {
             InitializeComponent();
-
-            InitializeLogin().Wait();
+            InitializeLogin();
         }
 
         private async Task InitializeLogin()
