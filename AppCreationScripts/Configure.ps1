@@ -254,7 +254,7 @@ so that they are consistent with the Applications parameters
                                              -IdentifierUris $downstreamWebApiAppIdURI `
                                              -PasswordCredentials $key `
                                              -PublicClient $downstreamWebApiIsPublicClient
-	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId
+	$downstreamWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $downstreamWebApiAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
 	# Create the TodoListService Active Directory Application and it's service principal
@@ -263,7 +263,7 @@ so that they are consistent with the Applications parameters
                                              -HomePage $todoListServiceWebApiBaseUrl `
                                              -IdentifierUris $todoListServiceWebApiAppIdURI `
                                              -PublicClient $todoListServiceWebApiIsPublicClient
-	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId
+	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Add Required Resources Access (from 'TodoListService' to 'Downstream Web API')
@@ -282,7 +282,7 @@ so that they are consistent with the Applications parameters
                                              -ReplyUrls $todoListClientRedirectUri `
                                              -PublicClient $todoListClientIsPublicClient `
 											 -RequiredResourceAccess $requiredResourcesAccess
-	$todoListClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListClientAadApplication.AppId
+	$todoListClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListClientAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Add Required Resources Access (from 'TodoListClient' to 'TodoListService')
@@ -303,7 +303,7 @@ so that they are consistent with the Applications parameters
 											 -RequiredResourceAccess $requiredResourcesAccess `
 	                                         -IdentifierUris $todoListSPAClientAppIdURI `
 											 -Oauth2AllowImplicitFlow $true
-	$todoListSPAClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListSPAClientAadApplication.AppId
+	$todoListSPAClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListSPAClientAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Configure TodoListClient and the SPA as a known client applications on the TodoListService
