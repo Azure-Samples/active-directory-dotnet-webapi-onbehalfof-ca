@@ -287,7 +287,7 @@ namespace TodoListClient
                 // Call to our api was successful 
                 MessageBox.Show("We already Stepped-up.  Successfully called CA protected Web API");
             }
-            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest && response.ReasonPhrase == INTERACTION_REQUIRED)
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && response.ReasonPhrase == INTERACTION_REQUIRED)
             {
                 // We need to setup the token to account for a Conditional Access Policy
                 String claimsParam = await response.Content.ReadAsStringAsync();
@@ -395,6 +395,7 @@ namespace TodoListClient
 
         private async Task SignInCA(String claims, string displayName)
         {
+/*
             // If there is already a token in the cache, clear the cache and update the label on the button.
             if (SignInButton.Content.ToString() == "Clear Cache")
             {
@@ -405,7 +406,7 @@ namespace TodoListClient
                 ClearCookies();
                 SignInButton.Content = "Sign In";
             }
-
+*/
             //
             // Get an access token to call the To Do list service w/ CA.
             //
@@ -413,7 +414,7 @@ namespace TodoListClient
             try
             {
                 result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Always), 
-                    new UserIdentifier(displayName, UserIdentifierType.OptionalDisplayableId), "claims="+claims);
+                    new UserIdentifier(displayName, UserIdentifierType.OptionalDisplayableId), extraQueryParameters:null, claims:claims);
 
                 /* Update UI */
                 SignInButton.Content = "Clear Cache";
