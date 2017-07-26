@@ -224,7 +224,7 @@ namespace TodoListClient
             HttpContent content = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("Title", TodoText.Text) });
 
             // Call the To Do list service.
-            HttpResponseMessage response = await httpClient.PostAsync(todoListBaseAddress + "/api/todolist", content);
+            HttpResponseMessage response = await httpClient.PostAsync(todoListBaseAddress + "api/todolist", content);
 
             if (response.IsSuccessStatusCode)
             {
