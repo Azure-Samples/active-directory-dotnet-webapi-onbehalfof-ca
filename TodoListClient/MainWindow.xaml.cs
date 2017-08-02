@@ -79,7 +79,6 @@ namespace TodoListClient
         public MainWindow()
         {
             InitializeComponent();
-
             InitializeLogin();
         }
 
@@ -229,7 +228,7 @@ namespace TodoListClient
             if (response.IsSuccessStatusCode)
             {
                 TodoText.Text = "";
-                GetTodoList();
+                await GetTodoList();
             } else
             {
                 MessageBox.Show("An error occurred : " + response.ReasonPhrase);
@@ -420,7 +419,7 @@ namespace TodoListClient
                 SignInButton.Content = "Clear Cache";
 
                 /* Re-call the middle tier now that we've stepped/proofed-up */
-                GetTodoList();
+                await GetTodoList();
             }
             catch (AdalException ex)
             {
