@@ -175,11 +175,16 @@ Function ComputePassword
 
 # Create an application key
 # See https://www.sabin.io/blog/adding-an-azure-active-directory-application-and-key-using-powershell/
-Function CreateAppKey([DateTime] $fromDate, [int] $durationInYears, [string]$pw)
+Function CreateAppKey([DateTime] $fromDate, [double] $durationInYears, [string]$pw)
 {
     $endDate = $fromDate.AddYears($durationInYears) 
     $keyId = (New-Guid).ToString();
-    $key = New-Object Microsoft.Open.AzureAD.Model.PasswordCredential($null, $fromDate, $keyId, $endDate, $pw) 
+    $key = New-Object Microsoft.Open.AzureAD.Model.PasswordCredential
+	$key.StartDate = $fromDate
+	$key.EndDate = $endDate
+	$key.Value = $pw
+	$key.KeyId = $keyId
+	return $key
 }
 
 
@@ -243,7 +248,7 @@ so that they are consistent with the Applications parameters
 	# Get a 1 year application key for the Downstream Web API Application
     $pw = ComputePassword
     $fromDate = [DateTime]::Now
-    $key = CreateAppKey -fromDate $fromDate -durationInYears 1 $pw
+    $key = CreateAppKey -fromDate $fromDate -durationInYears 2 -pw $pw
     $appKey = $pw
 
 	# Create the Downstreamm Web Api Active Directory Application and it's service principal
@@ -262,8 +267,10 @@ so that they are consistent with the Applications parameters
     $todoListServiceWebApiAadApplication = New-AzureADApplication -DisplayName $todoListServiceWebApiName `
                                              -HomePage $todoListServiceWebApiBaseUrl `
                                              -IdentifierUris $todoListServiceWebApiAppIdURI `
+	   	                                     -PasswordCredentials $key `
                                              -PublicClient $todoListServiceWebApiIsPublicClient
-	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
+	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId `
+	                                        -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Add Required Resources Access (from 'TodoListService' to 'Downstream Web API')
@@ -306,6 +313,9 @@ so that they are consistent with the Applications parameters
 	$todoListSPAClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListSPAClientAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
+	Write-Host "Getting access from '$todoListSPAClientName' to '$todoListServiceWebApiName'"
+	Set-AzureADApplication -ObjectId $todoListSPAClientAadApplication.ObjectId -RequiredResourceAccess $requiredResourcesAccess
+	Write-Host "Granted."
     # Configure TodoListClient and the SPA as a known client applications on the TodoListService
 	Write-Host "Configure '$todoListSPAClientName' and '$todoListClientName' as known client applications for the '$todoListServiceWebApiName'"
 	$knowApplications = New-Object System.Collections.Generic.List[System.String]

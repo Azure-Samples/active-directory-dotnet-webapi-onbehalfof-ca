@@ -96,7 +96,7 @@ namespace TodoListClient
 
                 // A valid token is in the cache - get the To Do list.
                 SignInButton.Content = "Clear Cache";
-                GetTodoList();
+                await GetTodoList();
             }
             catch (AdalException ex)
             {
@@ -368,7 +368,7 @@ namespace TodoListClient
             {
                 result = await authContext.AcquireTokenAsync(todoListResourceId, clientId, redirectUri, new PlatformParameters(PromptBehavior.Always));
                 SignInButton.Content = "Clear Cache";
-                GetTodoList();
+                await GetTodoList();
             }
             catch (AdalException ex)
             {
