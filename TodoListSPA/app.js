@@ -1,6 +1,6 @@
 'use strict';
 
-config.callback = loggedin;
+config.callback = loggedIn;
 var authenticationContext = new AuthenticationContext(config);
 
 if (!config.popUp) {
@@ -48,7 +48,7 @@ function signOut() {
  * @param {string} idToken - Id token in case of success
  * @param {string} error - Error code
  */
-function loggedin(errorDescription, idToken, error) {
+function loggedIn(errorDescription, idToken, error) {
     if (error) {
         showError(errorDescription, error);
     }
