@@ -17,10 +17,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 using TodoListService.DAL;
+using System.Web.Http.Cors;
+using Microsoft.IdentityModel.Clients.ActiveDirectory.Exceptions;
 
 namespace TodoListService.Controllers
 {
     [Authorize]
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class AccessCaApiController : ApiController
     {
         //
@@ -47,9 +50,10 @@ namespace TodoListService.Controllers
 
 
         // GET: api/ConditionalAccess
-        public async Task Get()
+        public async Task<string> Get()
         {
-            if (!ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope").Value.Contains("user_impersonation"))
+            var scopeClaim = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope");
+            if (scopeClaim==null || !scopeClaim.Value.Contains("user_impersonation"))
             {
                 throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'user_impersonation' or scope claim not found" });
             }
@@ -85,34 +89,22 @@ namespace TodoListService.Controllers
                 {
                     result = await authContext.AcquireTokenAsync(caResourceId, clientCred, userAssertion);
                 }
+                catch (AdalClaimChallengeException ex)
+                {
+                    HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Claims) };
+                    throw new HttpResponseException(myMessage);
+                }
                 catch (AdalServiceException ex)
                 {
-                    if (ex.ErrorCode == INTERACTION_REQUIRED)
+                    if (ex.ErrorCode == "invalid_grant")
                     {
-                        String claims = null;
-                        String error = null;
-
-                        // Extracts the error and claims data from exception JSON 
-                        String temp = ex.InnerException.InnerException.Message;
-                        var output = JsonConvert.DeserializeObject(temp);
-
-                        foreach (var x in (JObject)output)
-                        {
-                            String jvalue = x.Key;
-                            if (jvalue == "claims")
-                            {
-                                claims = x.Value.ToString();
-                            }
-                            if (jvalue == "error")
-                            {
-                                error = x.Value.ToString();
-                            }
-                        }
-
-                        // Clear the token cache 
-                        authContext.TokenCache.Clear();
-
-                        HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.BadRequest, ReasonPhrase = error, Content = new StringContent(claims) };
+                        return ex.Message;
+                        //HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Message) };
+                        //throw new HttpResponseException(myMessage);
+                    }
+                    if (ex.ErrorCode == INTERACTION_REQUIRED )
+                    {
+                        HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Message) };
 
                         throw new HttpResponseException(myMessage);
                     }
@@ -142,7 +134,7 @@ namespace TodoListService.Controllers
             // httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             // HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
 
-            return;
+            return "protected API successfully called";
         }
     }
 }

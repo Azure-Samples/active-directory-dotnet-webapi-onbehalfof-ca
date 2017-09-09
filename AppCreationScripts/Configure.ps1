@@ -64,6 +64,48 @@ Function UpdateTodoListClientConfigFile([string] $configFilePath, [string] $tena
     ReplaceSetting -configFilePath $configFilePath -key "todo:TodoListBaseAddress" -newValue $baseAddress
 }
 
+Function UpdateLine([string] $line, [string] $value)
+{
+	$index = $line.IndexOf(':')
+	if ($index -ige 0)
+	{
+		$line = $line.Substring(0, $index+1) + " """+$value + ""","
+	}
+	return $line
+}
+
+Function UpdateTodoListSPAClientConfig([string] $configFilePath, [string] $tenantId, [string] $clientId, [string] $redirectUri, [string] $resourceId, [string] $baseAddress)
+{
+	$lines = Get-Content $configFilePath
+	$index = 0
+	while($index -lt $lines.Length)
+	{
+		$line = $lines[$index]
+		if ($line.Contains("tenant:"))
+		{
+			$lines[$index] = UpdateLine $line $tenantId
+		}
+		if ($line.Contains("clientId:"))
+		{
+			$lines[$index] = UpdateLine $line $clientId
+		}
+		if ($line.Contains("redirectUri:"))
+		{
+			$lines[$index] = UpdateLine $line $redirectUri
+		}
+		if ($line.Contains("resourceId:"))
+		{
+			$lines[$index] = UpdateLine $line $resourceId
+		}
+		if ($line.Contains("resourceBaseAddress:"))
+		{
+			$lines[$index] = UpdateLine $line $baseAddress
+		}
+		$index++
+	}
+	
+	Set-Content -Path $configFilePath -Value $lines -Force
+}
 
 # Adds the requiredAccesses (expressed as a pipe separated string) to the requiredAccess structure
 # The exposed permissions are in the $exposedPermissions collection, and the type of permission (Scope | Role) is 
@@ -133,11 +175,16 @@ Function ComputePassword
 
 # Create an application key
 # See https://www.sabin.io/blog/adding-an-azure-active-directory-application-and-key-using-powershell/
-Function CreateAppKey([DateTime] $fromDate, [int] $durationInYears, [string]$pw)
+Function CreateAppKey([DateTime] $fromDate, [double] $durationInYears, [string]$pw)
 {
     $endDate = $fromDate.AddYears($durationInYears) 
     $keyId = (New-Guid).ToString();
-    $key = New-Object Microsoft.Open.AzureAD.Model.PasswordCredential($null, $fromDate, $keyId, $endDate, $pw) 
+    $key = New-Object Microsoft.Open.AzureAD.Model.PasswordCredential
+	$key.StartDate = $fromDate
+	$key.EndDate = $endDate
+	$key.Value = $pw
+	$key.KeyId = $keyId
+	return $key
 }
 
 
@@ -201,13 +248,14 @@ so that they are consistent with the Applications parameters
 	# Get a 1 year application key for the Downstream Web API Application
     $pw = ComputePassword
     $fromDate = [DateTime]::Now
-    $key = CreateAppKey -fromDate $fromDate -durationInYears 1 $pw
+    $key = CreateAppKey -fromDate $fromDate -durationInYears 2 -pw $pw
     $appKey = $pw
 
 	# Create the Downstreamm Web Api Active Directory Application and it's service principal
     Write-Host "Creating the AAD appplication ($downstreamWebApiName)"
     $downstreamWebApiAadApplication = New-AzureADApplication -DisplayName $downstreamWebApiName `
                                              -HomePage $downstreamWebApiBaseUrl `
+	                                         -ReplyUrls $downstreamWebApiBaseUrl `
                                              -IdentifierUris $downstreamWebApiAppIdURI `
                                              -PasswordCredentials $key `
                                              -PublicClient $downstreamWebApiIsPublicClient
@@ -219,8 +267,10 @@ so that they are consistent with the Applications parameters
     $todoListServiceWebApiAadApplication = New-AzureADApplication -DisplayName $todoListServiceWebApiName `
                                              -HomePage $todoListServiceWebApiBaseUrl `
                                              -IdentifierUris $todoListServiceWebApiAppIdURI `
+	   	                                     -PasswordCredentials $key `
                                              -PublicClient $todoListServiceWebApiIsPublicClient
-	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId
+	$todoListServiceWebApiServicePrincipal = New-AzureADServicePrincipal -AppId $todoListServiceWebApiAadApplication.AppId `
+	                                        -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Add Required Resources Access (from 'TodoListService' to 'Downstream Web API')
@@ -239,7 +289,7 @@ so that they are consistent with the Applications parameters
                                              -ReplyUrls $todoListClientRedirectUri `
                                              -PublicClient $todoListClientIsPublicClient `
 											 -RequiredResourceAccess $requiredResourcesAccess
-	$todoListClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListClientAadApplication.AppId
+	$todoListClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListClientAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
 	Write-Host "Created."
 
     # Add Required Resources Access (from 'TodoListClient' to 'TodoListService')
@@ -251,9 +301,27 @@ so that they are consistent with the Applications parameters
 	Set-AzureADApplication -ObjectId $todoListClientAadApplication.ObjectId -RequiredResourceAccess $requiredResourcesAccess
 	Write-Host "Granted."
 
-    # Configure TodoListClient as a known client application on the TodoListService
-	Write-Host "Configure '$todoListClientName' as a known client application on the '$todoListServiceWebApiName'"
-    Set-AzureADApplication -ObjectId $todoListServiceWebApiAadApplication.ObjectId -KnownClientApplications $todoListClientAadApplication.AppId
+	# Create the TodoListSPAClient Active Directory Application and it's service principal 
+    Write-Host "Creating the AAD appplication ($todoListSPAClientName) and requesting access to '$todoListServiceWebApiName'"
+    $todoListSPAClientAadApplication = New-AzureADApplication -DisplayName $todoListSPAClientName `
+											 -Homepage $todoListSPAClientRedirectUri `
+                                             -ReplyUrls $todoListSPAClientRedirectUri `
+                                             -PublicClient $todoListSPAClientIsPublicClient `
+											 -RequiredResourceAccess $requiredResourcesAccess `
+	                                         -IdentifierUris $todoListSPAClientAppIdURI `
+											 -Oauth2AllowImplicitFlow $true
+	$todoListSPAClientServicePrincipal = New-AzureADServicePrincipal -AppId $todoListSPAClientAadApplication.AppId -Tags {WindowsAzureActiveDirectoryIntegratedApp}
+	Write-Host "Created."
+
+	Write-Host "Getting access from '$todoListSPAClientName' to '$todoListServiceWebApiName'"
+	Set-AzureADApplication -ObjectId $todoListSPAClientAadApplication.ObjectId -RequiredResourceAccess $requiredResourcesAccess
+	Write-Host "Granted."
+    # Configure TodoListClient and the SPA as a known client applications on the TodoListService
+	Write-Host "Configure '$todoListSPAClientName' and '$todoListClientName' as known client applications for the '$todoListServiceWebApiName'"
+	$knowApplications = New-Object System.Collections.Generic.List[System.String]
+	$knowApplications.Add($todoListSPAClientAadApplication.AppId)
+	$knowApplications.Add($todoListClientAadApplication.AppId)
+    Set-AzureADApplication -ObjectId $todoListServiceWebApiAadApplication.ObjectId -KnownClientApplications $knowApplications
 	Write-Host "Configured."
  
     # Update the config files in the application
@@ -275,6 +343,15 @@ so that they are consistent with the Applications parameters
                             -baseAddress $todoListServiceWebApiBaseUrl `
 	                        -resourceId $todoListServiceWebApiAppIdURI
 
+    $configFile = $pwd.Path + "\..\TodoListSPA\appconfig.js"
+    Write-Host "Updating the sample code ($configFile)"
+	UpdateTodoListSPAClientConfig -configFilePath $configFile `
+								  -tenantId $tenantName `
+								  -clientId $todoListSPAClientAadApplication.AppId `
+								  -redirectUri $todoListSPAClientRedirectUri `
+	                              -resourceId $todoListServiceWebApiAppIdURI `
+								  -baseAddress $todoListServiceWebApiBaseUrl
+	   
 
 	Write-Host "REMEMBER: You still need to Create and link a Conditional Access Policy in the Azure portal. See https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca" -foregroundcolor "Cyan"
 
