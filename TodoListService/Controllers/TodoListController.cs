@@ -61,7 +61,6 @@ namespace TodoListService.Controllers
         //
         private static string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
         private static string graphUserUrl = ConfigurationManager.AppSettings["ida:GraphUserUrl"];
-        private const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
 
         //
         // To Do items list for all users.  Since the list is stored in memory, it will go away if the service is cycled.
@@ -104,8 +103,7 @@ namespace TodoListService.Controllers
             // Call the Graph API On Behalf Of the user who called the To Do list web API.
             //
             string augmentedTitle = null;
-            UserProfile profile = new UserProfile();
-            profile = await CallGraphAPIOnBehalfOfUser();
+            UserProfile profile = await CallGraphAPIOnBehalfOfUser();
 
             if (profile != null)
             {
@@ -116,7 +114,7 @@ namespace TodoListService.Controllers
                 augmentedTitle = todo.Title;
             }
 
-            if (null != todo && !string.IsNullOrWhiteSpace(todo.Title))
+            if (!string.IsNullOrWhiteSpace(todo.Title))
             {
                 db.TodoItems.Add(new TodoItem { Title = augmentedTitle, Owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value });
                 db.SaveChanges();
@@ -140,7 +138,7 @@ namespace TodoListService.Controllers
             var bootstrapContext = ClaimsPrincipal.Current.Identities.First().BootstrapContext as System.IdentityModel.Tokens.BootstrapContext;
             string userName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn) != null ? ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value : ClaimsPrincipal.Current.FindFirst(ClaimTypes.Email).Value;
             string userAccessToken = bootstrapContext.Token;
-            UserAssertion userAssertion = new UserAssertion(bootstrapContext.Token, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
+            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
 
             string authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
             string userId = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
