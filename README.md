@@ -9,7 +9,7 @@ endpoint: AAD V1
 ---
 # .NET Native App accessing Web Service that calls a downstream Web API with Conditional Access
 
-![Build badge](https://identitydivision.visualstudio.com/_apis/public/build/definitions/a7934fdd-dcde-4492-a406-7fad6ac00e17/XXX/badge)
+![Build badge](https://identitydivision.visualstudio.com/_apis/public/build/definitions/a7934fdd-dcde-4492-a406-7fad6ac00e17/496/badge)
 
 ## About this Sample
 
@@ -38,7 +38,7 @@ This sample is intended to explore the implications of using the On-Behalf-Of fl
 
 ## Topology
 
-![Overview](./ReadmeFiles/topology.png)
+![Overview](./ReadmeFiles/Topology.png)
 
 This sample has three components:
 
