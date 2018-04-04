@@ -69,7 +69,6 @@ namespace TodoListService.Controllers
 
         // Error Constants
         const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
-        const String INTERACTION_REQUIRED = "interaction_required";
 
         // GET api/todolist
         public IEnumerable<TodoItem> Get()

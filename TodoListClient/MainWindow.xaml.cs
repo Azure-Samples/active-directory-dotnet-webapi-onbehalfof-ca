@@ -93,7 +93,7 @@ namespace TodoListClient
             GetTodoList(SignInButton.Content.ToString() != clearCacheString);
         }
 
-        private async void GetTodoList(bool isAppStarting)
+        private async Task GetTodoList(bool isAppStarting)
         {
             //
             // Get an access token to call the To Do service.

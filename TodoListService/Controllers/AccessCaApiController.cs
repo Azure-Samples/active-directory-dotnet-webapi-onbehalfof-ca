@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using System;
+using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Web.Http;
-
-using TodoListService.Models;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using System.Web;
-using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Threading;
-using TodoListService.DAL;
+using System.Threading.Tasks;
+using System.Web.Http;
 using System.Web.Http.Cors;
-using Microsoft.IdentityModel.Clients.ActiveDirectory.Exceptions;
+using TodoListService.DAL;
 
 namespace TodoListService.Controllers
 {
@@ -71,7 +63,7 @@ namespace TodoListService.Controllers
             var bootstrapContext = ClaimsPrincipal.Current.Identities.First().BootstrapContext as System.IdentityModel.Tokens.BootstrapContext;
             string userName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn) != null ? ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value : ClaimsPrincipal.Current.FindFirst(ClaimTypes.Email).Value;
             string userAccessToken = bootstrapContext.Token;
-            UserAssertion userAssertion = new UserAssertion(bootstrapContext.Token, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
+            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
 
             string authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
             string userId = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
@@ -99,8 +91,6 @@ namespace TodoListService.Controllers
                     if (ex.ErrorCode == "invalid_grant")
                     {
                         return ex.Message;
-                        //HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Message) };
-                        //throw new HttpResponseException(myMessage);
                     }
                     if (ex.ErrorCode == INTERACTION_REQUIRED )
                     {
@@ -121,18 +111,15 @@ namespace TodoListService.Controllers
                 }
             } while ((retry == true) && (retryCount < 1));
 
-            // Access token is available in result; 
-            String oboAccessToken = result.AccessToken;
-
-            //
-            // We can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
-            // Use this code below to call the downstream Web API OBO
-            //
-
-            // e.g.
-            // private HttpClient httpClient = new HttpClient();
-            // httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
-            // HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
+            /*
+             You can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+             Use this code below to call the downstream Web API OBO
+             
+            string oboAccessToken = result.AccessToken;
+            private HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+            HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
+            */
 
             return "protected API successfully called";
         }
