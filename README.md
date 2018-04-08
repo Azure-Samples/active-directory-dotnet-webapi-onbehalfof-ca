@@ -52,7 +52,7 @@ This sample has three components:
 
 ### Scenario
 
-As in the previous sample, you sign in, and add items. You can also click on the **Satisfy CA** button, which will call an action of the `TodoListService` Web API that itself acquires a token in order to call the downstream service. As this downstream service requires MFA, the `TodoListService` will get an `AdalClaimsChallengeException` which it will then propagate back to the client through the Web API response. When the `TodoListClient` desktop application received the error after calling the  `TodoListService` Web API, it extracts the additional Claims to request, and requests another token from Azure AD, with these additional claims. It can then use this token to call the `TodoListService`, and this time, this succeeds
+As in the previous sample, you sign in, and add items. You can also click on the **Satisfy CA** button, which will call an action of the `TodoListService` Web API that itself acquires a token in order to call the downstream service. As this downstream service requires MFA, the `TodoListService` will get an  that it will then propagate back to the client through the Web API response. When the `TodoListClient` desktop application received the error after calling the  `TodoListService` Web API, it extracts the additional Claims to request, and requests another token from Azure AD, with these additional claims. It can then use this token to call the `TodoListService`, and this time, this succeeds
 
 ![UI](./ReadmeFiles/TodoListClient.png)
 
@@ -69,7 +69,11 @@ To run this sample, you'll need:
 
 From your shell or command line:
 
-`git clone https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca.git`
+```Shell
+git clone https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca.git`
+```
+
+> Given that the name of the sample is pretty long, and so are the name of the referenced NuGet pacakges, you might want to clone it in a folder close to the root of your hard drive, to avoid file size limitations on Windows.
 
 ### Step 2:  Register the sample with your Azure Active Directory tenant
 
@@ -80,7 +84,7 @@ There are tree projects and four applications in this sample. Each needs to be s
   - **automatically** create for you the Azure AD applications and related objects (passwords, permissions, dependencies)
   - modify the Visual Studio projects' configuration files.
 
-If you want to do use this automation, read the instructions in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md)
+If you want to use this automation, read the instructions in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md)
 
 #### First step: choose the Azure AD tenant where you want to create your applications
 
@@ -118,8 +122,8 @@ As a first step you'll need to:
      so record it as soon as it is visible from the Azure portal.
 1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then:
 
-- click on **Add**, then **Select an API**, and type `Microsoft Graph` in the textbox. Then, click on  **Select Permissions** and select **User.Read**.
-- click on **Add**, then **Select an API**, and type `DownstreamService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'DownstreamService-OBO-CA'**.
+   - click on **Add**, then **Select an API**, and type `Microsoft Graph` in the textbox. Then, click on  **Select Permissions** and select **User.Read**.
+   - click on **Add**, then **Select an API**, and type `DownstreamService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'DownstreamService-OBO-CA'**.
 
 #### Register the client app (TodoListClient-DotNet-OBO-CA)
 
@@ -289,7 +293,7 @@ Use [Stack Overflow](http://stackoverflow.com/questions/tagged/adal) to get supp
 Ask your questions on Stack Overflow first and browse existing issues to see if someone has asked your question before.
 Make sure that your questions or comments are tagged with [`adal` `dotnet`].
 
-If you find and bug in the sample, please raise the issue on [GitHub Issues](../../issues).
+If you find a bug in the sample, please raise the issue on [GitHub Issues](../../issues).
 
 To provide a recommendation, visit the following [User Voice page](https://feedback.azure.com/forums/169401-azure-active-directory).
 
