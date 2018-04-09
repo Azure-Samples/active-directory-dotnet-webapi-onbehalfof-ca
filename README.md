@@ -94,6 +94,9 @@ As a first step you'll need to:
 1. On the top bar, click on your account and under the **Directory** list, choose the Active Directory tenant where you wish to register your application.
 1. Click on **All services** in the left-hand nav, and choose **Azure Active Directory**.
 
+> In the next steps, you might need the tenant name (or directory name) or the tenant ID (or directory ID). These are presented in the **Properties**
+  of the Azure Active Directory window respectively as *Name* and *Directory ID*
+
 #### Register the downstream service app (DownstreamService-OBO-CA)
 
 1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
@@ -133,7 +136,6 @@ As a first step you'll need to:
 1. Click on **Create** to create the application.
 1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
 1. Then click on **Settings**, and choose **Properties**.
-1. For the App ID URI, replace the guid in the generated URI 'https://\<your_tenant_name\>/\<guid\>', with the name of your service, for example, 'https://\<your_tenant_name\>/TodoListClient-DotNet-OBO-CA' (replacing `<your_tenant_name>` with the name of your Azure AD tenant)
 1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then,
    click on **Add**, then **Select an API**, and type `TodoListService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'TodoListService-OBO-CA'**.
 
@@ -171,7 +173,7 @@ In the steps below, ClientID is the same as Application ID or AppId.
 
 Open the solution in Visual Studio to configure the projects
 
-### Configure the service project
+#### Configure the service project
 
 1. Open the `TodoListService\Web.Config` file
 1. Find the app key `ida:Tenant` and replace the existing value with your AAD tenant name.
@@ -180,7 +182,7 @@ Open the solution in Visual Studio to configure the projects
 1. Find the app key `ida:ClientID` and replace the existing value with the application ID (clientId) of the `TodoListService-OBO-CA` application copied from the Azure portal.
 1. Find the app key `ida:CAProtectedResource` and replace the existing value with the App ID URI you registered earlier for the DownstreamService-OBO-CA app. For instance use `https://<your_tenant_name>/DownstreamService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
 
-### Configure the client project
+#### Configure the client project
 
 1. Open the `TodoListClient\App.Config` file
 1. Find the app key `ida:Tenant` and replace the existing value with your AAD tenant name.
@@ -189,7 +191,7 @@ Open the solution in Visual Studio to configure the projects
 1. Find the app key `todo:TodoListResourceId` and replace the existing value with the App ID URI you registered earlier for the TodoListService-OBO-CA app. For instance use `https://<your_tenant_name>/TodoListService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
 1. Find the app key `todo:TodoListBaseAddress` and replace the existing value with the base address of the TodoListService-OBO-CA project (by default `https://localhost:44321/`).
 
-### [Optionally] Configure the spa project
+#### [Optionally] Configure the spa project
 
 1. Open the `TodoListSPA\appconfig.js` file
 1. Find the app key `tenant` and replace the existing value with your AAD tenant name.
