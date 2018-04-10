@@ -1,18 +1,26 @@
-﻿//----------------------------------------------------------------------------------------------
-//    Copyright 2014 Microsoft Corporation
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//----------------------------------------------------------------------------------------------
+﻿/*
+ The MIT License (MIT)
+
+Copyright (c) 2015 Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 using System;
 using System.Collections.Generic;
@@ -32,7 +40,6 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Web;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Threading;
 using TodoListService.DAL;
 using System.Web.Http.Cors;
@@ -41,6 +48,7 @@ namespace TodoListService.Controllers
 {
    [Authorize]
    [EnableCors(origins: "*", headers: "*", methods: "*")]
+
     public class TodoListController : ApiController
     {
         //
@@ -52,7 +60,7 @@ namespace TodoListService.Controllers
         //
         private static string aadInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
         private static string tenant = ConfigurationManager.AppSettings["ida:Tenant"];
-        private static string clientId = ConfigurationManager.AppSettings["ida:ClientId"];
+        private static string clientId = ConfigurationManager.AppSettings["ida:ClientID"];
         private static string appKey = ConfigurationManager.AppSettings["ida:AppKey"];
 
         //
@@ -61,7 +69,6 @@ namespace TodoListService.Controllers
         //
         private static string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
         private static string graphUserUrl = ConfigurationManager.AppSettings["ida:GraphUserUrl"];
-        private const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
 
         //
         // To Do items list for all users.  Since the list is stored in memory, it will go away if the service is cycled.
@@ -70,7 +77,6 @@ namespace TodoListService.Controllers
 
         // Error Constants
         const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
-        const String INTERACTION_REQUIRED = "interaction_required";
 
         // GET api/todolist
         public IEnumerable<TodoItem> Get()
@@ -104,8 +110,7 @@ namespace TodoListService.Controllers
             // Call the Graph API On Behalf Of the user who called the To Do list web API.
             //
             string augmentedTitle = null;
-            UserProfile profile = new UserProfile();
-            profile = await CallGraphAPIOnBehalfOfUser();
+            UserProfile profile = await CallGraphAPIOnBehalfOfUser();
 
             if (profile != null)
             {
@@ -116,7 +121,7 @@ namespace TodoListService.Controllers
                 augmentedTitle = todo.Title;
             }
 
-            if (null != todo && !string.IsNullOrWhiteSpace(todo.Title))
+            if (!string.IsNullOrWhiteSpace(todo.Title))
             {
                 db.TodoItems.Add(new TodoItem { Title = augmentedTitle, Owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value });
                 db.SaveChanges();
@@ -140,7 +145,7 @@ namespace TodoListService.Controllers
             var bootstrapContext = ClaimsPrincipal.Current.Identities.First().BootstrapContext as System.IdentityModel.Tokens.BootstrapContext;
             string userName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn) != null ? ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value : ClaimsPrincipal.Current.FindFirst(ClaimTypes.Email).Value;
             string userAccessToken = bootstrapContext.Token;
-            UserAssertion userAssertion = new UserAssertion(bootstrapContext.Token, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
+            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
 
             string authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
             string userId = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
@@ -180,12 +185,8 @@ namespace TodoListService.Controllers
             //
             // Call the Graph API and retrieve the user's profile.
             //
-            string requestUrl = String.Format(
-                CultureInfo.InvariantCulture,
-                graphUserUrl,
-                HttpUtility.UrlEncode(tenant));
             HttpClient client = new HttpClient();
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, graphUserUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             HttpResponseMessage response = await client.SendAsync(request);
 

@@ -7,13 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListService", "TodoList
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListClient", "TodoListClient\TodoListClient.csproj", "{005E6BB1-F422-4366-B548-1BDE150F0073}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AppCreationScripts", "AppCreationScripts", "{54229C49-72E6-4463-85EF-D27D4F7275C6}"
-	ProjectSection(SolutionItems) = preProject
-		AppCreationScripts\Cleanup.ps1 = AppCreationScripts\Cleanup.ps1
-		AppCreationScripts\Config.ps1 = AppCreationScripts\Config.ps1
-		AppCreationScripts\Configure.ps1 = AppCreationScripts\Configure.ps1
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListSPA", "TodoListSPA\TodoListSPA.csproj", "{4D3D23D8-8DD4-45B4-BCAE-C4C57F36F9D3}"
 EndProject
 Global
@@ -37,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CB0D7D71-F660-4D19-8EE7-F88FF3629CA9}
 	EndGlobalSection
 EndGlobal
