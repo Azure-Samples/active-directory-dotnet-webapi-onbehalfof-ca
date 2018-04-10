@@ -4,7 +4,7 @@
 
 ### Presentation of the scripts
 
-This sample comes with two PowerShell scripts, which automate the creation of the Azure Active Directory applications, and the configuration of the code for this sample. Once you run them, you will only need to build the solution and you are good to test.
+This sample comes with two PowerShell scripts, which automate the creation of applications in the Azure Active Directory, and also configure the code for this sample. Once you run them, you will only need to build the solution and you are good to test.
 
 These scripts are:
 
@@ -22,7 +22,7 @@ These scripts are:
 
 The `Configure.ps1` will stop if it tries to create an Azure AD application which already exists in the tenant. For this, if you are using the script to try/test the sample, or in DevOps scenarios, you might want to run `Cleanup.ps1` just before `Configure.ps1`. This is what is shown in the steps below.
 
-## How to use the app creation scripts ?
+## How to use the app creation scripts?
 
 ### Pre-requisites
 
