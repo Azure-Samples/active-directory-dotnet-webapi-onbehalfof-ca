@@ -45,7 +45,7 @@ namespace TodoListService.Controllers
         public async Task<string> Get()
         {
             var scopeClaim = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope");
-            if (scopeClaim == null || (!scopeClaim.Value.ContainsAny("user_impersonation")))
+            if (scopeClaim == null || (!scopeClaim.Value.Contains("user_impersonation")))
             {
                 throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'user_impersonation' or scope claim not found" });
             }
@@ -92,7 +92,7 @@ namespace TodoListService.Controllers
                     {
                         return ex.Message;
                     }
-                    if (ex.ErrorCode == INTERACTION_REQUIRED )
+                    if (ex.ErrorCode == INTERACTION_REQUIRED)
                     {
                         HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Message) };
 
