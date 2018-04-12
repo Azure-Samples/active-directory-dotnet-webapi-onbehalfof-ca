@@ -23,7 +23,7 @@ As in that sample, the native client and a simple JavaScript single page applica
 
 1. Acquire a token to act On Behalf Of the user.
 2. Call a web API (`TodoListService`)
-3. Which itself calls another downstream Web API (The Microsoft Graph)
+3. Which itself calls another downstream Web API ([The Microsoft Graph](https://graph.microsoft.com))
 4. This sample then extends the features of the [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof) sample where the `TodoListService` Web API calls a downstream service, which requires conditional access. Therefore the intermediate service (`TodoListService`) needs to propagate to its clients the need to process additional claims (for instance to carry out  two factor authentication).
 
 Finally, as in the previous sample, the TodoListService uses a database to:
@@ -51,7 +51,7 @@ This sample has three components:
 
 ### Scenario
 
-As in the previous sample, you sign in, and add items. You can also click on the **Satisfy CA** button, which will call an action of the `TodoListService` Web API that itself acquires a token in order to call the downstream service. As this downstream service requires MFA, the `TodoListService` will get a 401 error with an additional claim that it will then propagate back to the client through the Web API response. When the `TodoListClient` desktop application receives this error, it extracts the additional Claims to request, and requests another token from Azure AD, with these additional claims. It can then use this token to call the `TodoListService`, and this time, this call will succeed.
+As in the previous sample, you sign in, and add items. You can also click on the **Satisfy CA** button, which will call an action of the `TodoListService` Web API that itself acquires a token in order to call the downstream service. As this downstream service requires MFA, the `TodoListService` will get a 401 error with an additional claim that it will then propagate back to the client through the Web API response. When the `TodoListClient` desktop application receives this error, it extracts the additional claims from response, and requests another token from Azure AD, with these additional claims. It can then use this token to call the `TodoListService`, and this time, this call will succeed.
 
 ![UI](./ReadmeFiles/TodoListClient.png)
 
@@ -83,7 +83,7 @@ There are three projects and four applications in this sample. Each needs to be 
   - **automatically** create for you the Azure AD applications and related objects (passwords, permissions, dependencies)
   - modify the Visual Studio projects' configuration files.
 
-If you want to use this automation, read the instructions in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md)
+If you want to use this automation, read the instructions in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md). After successfully executing the script, we advice you go through the various settings listed in  [Step 3](#step-3--configure-the-sample-to-use-your-azure-ad-tenant)). Carefully note the changes made to the configuration files of the various projects in the solution. This will help you understand better as how and where these come together to make this sample work.   
 
 #### First step: choose the Azure AD tenant where you want to create your applications
 
@@ -131,10 +131,10 @@ As a first step you'll need to:
 
 1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
 1. Enter a friendly name for the application, for example 'TodoListClient-DotNet-OBO-CA' and select 'Native' as the *Application Type*.
-1. For the *Redirect URI*, enter `https://<your_tenant_name>/TodoListClient-DotNet-OBO-CA`, replacing `<your_tenant_name>` with the name of your Azure AD tenant.
+1. For the redirect URI, enter `https://TodoListClient`. Note that the Redirect URI will not be used in this sample, but it needs to be defined nonetheless.
 1. Click on **Create** to create the application.
 1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
-1. Then click on **Settings**, and choose **Properties**.
+1. Then click on **Settings**, and choose **Required Permission**.
 1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then,
    click on **Add**, then **Select an API**, and type `TodoListService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'TodoListService-OBO-CA'**.
 
@@ -205,7 +205,7 @@ Open the solution in Visual Studio to configure the projects
 1. Inside the **Azure Active Directory** window, select the **Conditional access** button near the bottom of the list under `Security`.
 2. Go ahead and select **New Policy** and name your policy.
 3. Select the **Users and groups** button, select **All Users** in the **Include** tab.
-4. Select the **Cloud apps**, then hit the **Select apps** radio button in the **Include** tab, and select the `DownstreamCAService`.
+4. Select the **Cloud apps**, then hit the **Select apps** radio button in the **Include** tab, and select the `DownstreamService-OBO-CA`.
 5. Select the **Conditions** button, then hit **Client apps**, and enable **Configure** as well as select the **Select client apps** radio button and enable **Browser** and **Mobile apps and desktop clients**.
 6. Finally, select the **Grant** button and hit **Grant access**. Then check the **Require multi-factor authentication** option.
 7. Enable the policy and save. Access to your Web API now requires multi-factor authentication!
