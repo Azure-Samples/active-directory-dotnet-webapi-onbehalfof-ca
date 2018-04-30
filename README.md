@@ -142,9 +142,9 @@ As a first step you'll need to:
 
 1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
 1. Enter a friendly name for the application, for example 'TodoListSPA-OBO-CA' and select 'Web app / API' as the *Application Type*.
-1. For the *sign-on URL*, enter the base URL for the sample, which is by default `http://localhost:16969/`.
-1. Click on **Create** to create the application.
-1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
+1. For the *sign-on URL*, enter the base URL for the sample. By default, this sample uses `http://localhost:16969/`.
+1. Click **Create** to create the application.
+1. In the succeeding page, Find the *Application ID* value and record it for later. You'll need it to configure the Visual Studio configuration file for this project.
 1. Enable the OAuth 2 implicit grant for your application by choosing **Manifest** at the top of the application's page. Open the inline manifest editor.
    Search for the ``oauth2AllowImplicitFlow`` property. You will find that it is set to ``false``; change it to ``true`` and click on **Save** to save the manifest.
 1. Then click on **Settings**, and choose **Properties**.
@@ -168,7 +168,7 @@ You can do so by adding the "Client ID" of the client app, to the manifest of th
 
 ### Step 3:  Configure the sample to use your Azure AD tenant
 
-In the steps below, ClientID is the same as Application ID or AppId.
+In the steps below, "ClientID" is the same as "Application ID" or "AppId".
 
 Open the solution in Visual Studio to configure the projects
 
@@ -224,7 +224,7 @@ This project has two WebApp / Web API projects. To deploy them to Azure Web Site
 
 - create an Azure Web Site
 - publish the Web App / Web APIs to the web site, and
-- update it client(s) to call the web site instead of IIS Express.
+- update its client(s) to call the web site instead of IIS Express.
 
 Note that in this sample the `DownstreamService-OBO-CA` has an app registration, but does not
 correspond to a project (to keep the sample simple)
