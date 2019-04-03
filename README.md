@@ -11,6 +11,12 @@ endpoint: AAD V1
 
 ![Build badge](https://identitydivision.visualstudio.com/_apis/public/build/definitions/a7934fdd-dcde-4492-a406-7fad6ac00e17/496/badge)
 
+> There's a newer version of this sample! Check it out: https://github.com/azure-samples/ms-identity-dotnet-desktop-aspnetcore-webapi
+>
+> This newer sample takes advantage of the Microsoft identity platform (formerly Azure AD v2.0).
+>
+> While still in public preview, every component is supported in production environments.
+
 ## About this Sample
 
 The sample uses the Active Directory Authentication Library (ADAL) in a native client to obtain a token for the user to call the first web service, and also in the first web service to get a token to act on behalf of the user to call the second downstream web API.  The downstream web API will have a Conditional Access policy applied that requires Multiple Factors Authentication (MFA).
