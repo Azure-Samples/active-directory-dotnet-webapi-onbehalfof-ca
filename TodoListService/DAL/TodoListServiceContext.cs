@@ -19,9 +19,18 @@ namespace TodoListService.DAL
         public TodoListServiceContext() : base("name=TodoListServiceContext")
         {
         }
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            Database.SetInitializer<TodoListServiceContext>(null);
+            base.OnModelCreating(modelBuilder);
+        }
 
         public DbSet<TodoItem> TodoItems { get; set; }
+        
         public DbSet<PerWebUserCache> PerUserCacheList { get; set; }
-    
+        /// <summary>
+        /// The app token cache table
+        /// </summary>
+       
     }
 }
