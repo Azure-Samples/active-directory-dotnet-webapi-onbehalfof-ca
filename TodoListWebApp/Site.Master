@@ -50,7 +50,6 @@
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
                         <li><a id="A2" class="nav-link" runat="server" href="~/">Home</a></li>
-                        <li><a id="A3" class="nav-link" runat="server" href="~/About">About</a></li>
                         <li><a id="A4" class="nav-link" runat="server" href="~/TodoList/Index">TodoList</a></li>
                     </ul>
                     </div>

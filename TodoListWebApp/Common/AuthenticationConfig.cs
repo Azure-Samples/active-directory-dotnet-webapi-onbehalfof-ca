@@ -9,14 +9,6 @@ namespace TodoListWebApp
 {
     public static class AuthenticationConfig
     {
-        //public const string IssuerClaim = "iss";
-        //public const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
-        //public const string MicrosoftGraphGroupsApi = "https://graph.microsoft.com/v1.0/groups";
-        //public const string MicrosoftGraphUsersApi = "https://graph.microsoft.com/v1.0/users";
-        //public const string AdminConsentFormat = "https://login.microsoftonline.com/{0}/adminconsent?client_id={1}&state={2}&redirect_uri={3}";
-        //public const string BasicSignInScopes = "openid profile offline_access";
-        //public const string NameClaimType = "name";
-
         /// <summary>
         /// The Client ID is used by the application to uniquely identify itself to Azure AD.
         /// </summary>
@@ -36,7 +28,7 @@ namespace TodoListWebApp
 
         public static string TenantId = ConfigurationManager.AppSettings["ida:TenantId"];
 
-        public static string Authority = String.Format(CultureInfo.InvariantCulture, AADInstance, AuthenticationConfig.TenantId);
+        public static string Authority = String.Format(CultureInfo.InvariantCulture, AADInstance, TenantId);
       
         public static string PostLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
     }

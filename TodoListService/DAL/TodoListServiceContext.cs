@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
+﻿using System.Data.Entity;
 using TodoListService.Models;
 
 namespace TodoListService.DAL
@@ -18,11 +14,6 @@ namespace TodoListService.DAL
     
         public TodoListServiceContext() : base("name=TodoListServiceContext")
         {
-        }
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            Database.SetInitializer<TodoListServiceContext>(null);
-            base.OnModelCreating(modelBuilder);
         }
 
         public DbSet<TodoItem> TodoItems { get; set; }

@@ -148,12 +148,10 @@ namespace TodoList.Shared
                 IConfidentialClientApplication app = builder.Build();
                 _application = app;
 
-                SetCache(app.UserTokenCache);
-
                 // Initialize token cache providers
                 // After the ConfidentialClientApplication is created, we overwrite its default UserTokenCache serialization with our implementation
-                //TokenCacheHelper.EnableSerialization(app.UserTokenCache);
-                //MSALPerUserMemoryCache mSALPerUserMemoryCache = new MSALPerUserMemoryCache(app.UserTokenCache);
+                SetCache(app.UserTokenCache);
+
                 return app;
             }
             catch (Exception ex)
@@ -173,10 +171,6 @@ namespace TodoList.Shared
             {
                 TokenCacheHelper.EnableSerialization(tokenCache);
             }
-            //else if (_cacheType == CacheType.DistributedCache)
-            //{
-
-            //}
         }
         public async Task<AuthenticationResult> GetUserTokenOnBehalfOfAsync(IEnumerable<string> requestedScopes)
         {
@@ -214,11 +208,10 @@ namespace TodoList.Shared
         }
         public async Task RemoveAccount()
         {
-            string authority = $"{_applicationOptions.Instance}{_applicationOptions.TenantId}/";
             IConfidentialClientApplication app = BuildConfidentialClientApplicationAsync().Result;
 
             // We only clear the user's tokens.
-            MSALPerUserMemoryCache mSALPerUserMemoryCache = new MSALPerUserMemoryCache(app.UserTokenCache);
+            SetCache(app.UserTokenCache);
             
             var userAccount = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
             if (userAccount != null)

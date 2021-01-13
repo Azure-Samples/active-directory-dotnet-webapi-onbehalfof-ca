@@ -51,6 +51,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="MicrosoftIdentityOptions.cs" />
     <Compile Include="MicrosoftIdentityOptionsValidation.cs" />
+    <Compile Include="MicrosoftIdentityWebChallengeUserException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenAcquisition.cs" />
     <Compile Include="TokenCacheProviders\TokenCacheFileHelper.cs" />

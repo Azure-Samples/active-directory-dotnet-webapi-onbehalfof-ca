@@ -33,25 +33,34 @@ namespace TodoListWebApp
         }
         public static async Task<AuthenticationResult> GetAccessTokenForUserAsync()
         {
-            var app = BuildConfidentialClientApplication();
-            AuthenticationResult result = null;
-            IAccount account = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
             try
             {
+
+                var app = BuildConfidentialClientApplication();
+                AuthenticationResult result = null;
+                IAccount account = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
                 result = await app.AcquireTokenSilent(new[] { SetOptions.TodoListServiceScope }, account)
                    .ExecuteAsync();
+
+                return result;
             }
             catch (MsalUiRequiredException ex)
             {
-                IncrementalConsentExceptionHandler(ex);
+                // Case of the web app: we let the MsalUiRequiredException be caught by the
+                // AuthorizeForScopesAttribute exception filter so that the user can consent, do 2FA, etc ...
+                throw new MicrosoftIdentityWebChallengeUserException(ex, new[] { SetOptions.TodoListServiceScope }, null);
             }
-            return result;
         }
-        public static void IncrementalConsentExceptionHandler(MsalUiRequiredException ex)
+        public static void IncrementalConsentExceptionHandler(Exception ex)
         {
             string redirectUri = HttpContext.Current.Request.Url.ToString();
-
-            if (CanBeSolvedByReSignInOfUser(ex))
+            MicrosoftIdentityWebChallengeUserException microsoftIdentityWebChallengeUserException =
+                   ex as MicrosoftIdentityWebChallengeUserException;
+            if (microsoftIdentityWebChallengeUserException == null)
+            {
+                microsoftIdentityWebChallengeUserException = ex.InnerException as MicrosoftIdentityWebChallengeUserException;
+            }
+            if (CanBeSolvedByReSignInOfUser(microsoftIdentityWebChallengeUserException.MsalUiRequiredException))
             {
                 HttpContext.Current.GetOwinContext().Authentication.Challenge(
                    new AuthenticationProperties { RedirectUri = redirectUri },
@@ -92,7 +101,7 @@ namespace TodoListWebApp
         private static async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedNotification context)
         {
             // Call MSAL.NET AcquireTokenByAuthorizationCode
-            var application = Common.BuildConfidentialClientApplication();
+            var application = BuildConfidentialClientApplication();
             var result = await application.AcquireTokenByAuthorizationCode(new[] { SetOptions.TodoListServiceScope },
                                                                      context.ProtocolMessage.Code)
                                     .ExecuteAsync();

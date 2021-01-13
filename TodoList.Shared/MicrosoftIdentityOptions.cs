@@ -27,77 +27,12 @@ namespace TodoList.Shared
         public string Domain { get; set; }
 
         /// <summary>
-        /// Gets or sets the edit profile user flow name for B2C, e.g. b2c_1_edit_profile.
-        /// </summary>
-        //public string? EditProfilePolicyId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the sign up or sign in user flow name for B2C, e.g. b2c_1_susi.
-        /// </summary>
-        //public string? SignUpSignInPolicyId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the reset password user flow name for B2C, e.g. B2C_1_password_reset.
-        /// </summary>
-        //public string? ResetPasswordPolicyId { get; set; }
-
-        /// <summary>
-        /// Gets the default user flow (which is signUpsignIn).
-        /// </summary>
-        //public string? DefaultUserFlow => SignUpSignInPolicyId;
-
-        /// <summary>
         /// Is considered B2C if the attribute SignUpSignInPolicyId is defined.
         /// </summary>
         internal bool IsB2C
         {
             get => !string.IsNullOrWhiteSpace(null);
         }
-
-        /// <summary>
-        /// Is considered to have client credentials if the attribute ClientCertificates
-        /// or ClientSecret is defined.
-        /// </summary>
-        //internal bool HasClientCredentials
-        //{
-        //    get => !string.IsNullOrWhiteSpace(ClientSecret) || (ClientCertificates != null && ClientCertificates.Any());
-        //}
-
-        /// <summary>
-        /// Description of the certificates used to prove the identity of the web app or web API.
-        /// For the moment only the first certificate is considered.
-        /// </summary>
-        /// <example> An example in the appsetting.json:
-        /// <code>
-        /// "ClientCertificates": [
-        ///   {
-        ///     "SourceType": "StoreWithDistinguishedName",
-        ///      "CertificateStorePath": "CurrentUser/My",
-        ///      "CertificateDistinguishedName": "CN=WebAppCallingWebApiCert"
-        ///     }
-        ///    ]
-        ///   </code>
-        ///   See also https://aka.ms/ms-id-web-certificates.
-        ///   </example>
-        //public IEnumerable<CertificateDescription>? ClientCertificates { get; set; }
-
-        /// <summary>
-        /// Description of the certificates used to decrypt an encrypted token in a web API.
-        /// For the moment only the first certificate is considered.
-        /// </summary>
-        /// <example> An example in the appsetting.json:
-        /// <code>
-        /// "TokenDecryptionCertificates": [
-        ///   {
-        ///     "SourceType": "StoreWithDistinguishedName",
-        ///      "CertificateStorePath": "CurrentUser/My",
-        ///      "CertificateDistinguishedName": "CN=WebAppCallingWebApiCert"
-        ///     }
-        ///    ]
-        ///   </code>
-        ///   See also https://aka.ms/ms-id-web-certificates.
-        ///   </example>
-        //public IEnumerable<CertificateDescription>? TokenDecryptionCertificates { get; set; }
 
         /// <summary>
         /// Specifies if the x5c claim (public key of the certificate) should be sent to the STS.

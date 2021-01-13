@@ -58,7 +58,7 @@ namespace TodoListService.Controllers
         // To contact the Me endpoint on the Graph API we need the URL as well.
         //
         private static string graphUserUrl = ConfigurationManager.AppSettings["ida:GraphUserUrl"];
-        private static IEnumerable<string> requestedScopes = new List<string> { ConfigurationManager.AppSettings["ida:GraphScope2"] };
+        private static IEnumerable<string> requestedScopes = new List<string> { ConfigurationManager.AppSettings["ida:GraphScope"] };
 
         //
         // To Do items list for all users.  Since the list is stored in memory, it will go away if the service is cycled.
@@ -99,21 +99,17 @@ namespace TodoListService.Controllers
             //
             // Call the Graph API On Behalf Of the user who called the To Do list web API.
             //
-            string augmentedTitle = null;
+            string dsiplayName = string.Empty;
             UserProfile profile = await CallGraphAPIOnBehalfOfUser();
 
-            //if (profile != null)
-            //{
-            //    augmentedTitle = String.Format("{0}, First Name: {1}, Last Name: {2}", todo.Title);
-            //}
-            //else
-            //{
-                augmentedTitle = todo.Title;
-            //}
+            if (profile != null)
+            {
+                dsiplayName = profile.DisplayName;
+            }
 
             if (!string.IsNullOrWhiteSpace(todo.Title))
             {
-                db.TodoItems.Add(new TodoItem { Title = augmentedTitle, Owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value });
+                db.TodoItems.Add(new TodoItem { Title = todo.Title, Owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value, DisplayName = dsiplayName });
                 db.SaveChanges();
             }
         }
@@ -176,6 +172,14 @@ namespace TodoListService.Controllers
 
             // An unexpected error occurred calling the Graph API.  Return a null profile.
             return (null);
+        }
+
+        // Delete api/todolist
+        public void Delete(int id)
+        {
+            TodoItem todo = db.TodoItems.Find(id);
+            db.TodoItems.Remove(todo);
+            db.SaveChanges();
         }
     }
 }
