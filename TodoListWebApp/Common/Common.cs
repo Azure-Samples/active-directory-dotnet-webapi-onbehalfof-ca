@@ -12,45 +12,40 @@ namespace TodoListWebApp
 {
     public static class Common
     {
-        static TokenAcquisition _tokenAcquisition = null;
+        static TokenAcquisition _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions(), CacheType.InMemoryCache);
 
         /// <summary>
-        /// Creates an MSAL Confidential client application
+        /// Creates an MSAL Confidential client application by calling BuildConfidentialClientApplicationAsync
         /// </summary>
-        /// <param name="httpContext">HttpContext associated with the OIDC response</param>
-        /// <param name="claimsPrincipal">Identity for the signed-in user</param>
         /// <returns></returns>
         public static IConfidentialClientApplication BuildConfidentialClientApplication()
         {
-            _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions(), CacheType.InMemoryCache);
             var app = _tokenAcquisition.BuildConfidentialClientApplicationAsync().Result;
             return app;
         }
+
+        /// <summary>
+        /// Calls method to Removes the account from the MSAL.NET cache.
+        /// </summary>
+        /// <returns></returns>
         public static void RemoveAccount()
         {
-            _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions(), CacheType.InMemoryCache);
-            _tokenAcquisition.RemoveAccount().ConfigureAwait(false);
+            _tokenAcquisition.RemoveAccountAsync().ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Call method to acquire Access Token for the signed-in user.
+        /// </summary>
+        /// <returns></returns>
         public static async Task<AuthenticationResult> GetAccessTokenForUserAsync()
         {
-            try
-            {
-
-                var app = BuildConfidentialClientApplication();
-                AuthenticationResult result = null;
-                IAccount account = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
-                result = await app.AcquireTokenSilent(new[] { SetOptions.TodoListServiceScope }, account)
-                   .ExecuteAsync();
-
-                return result;
-            }
-            catch (MsalUiRequiredException ex)
-            {
-                // Case of the web app: we let the MsalUiRequiredException be caught by the
-                // AuthorizeForScopesAttribute exception filter so that the user can consent, do 2FA, etc ...
-                throw new MicrosoftIdentityWebChallengeUserException(ex, new[] { SetOptions.TodoListServiceScope }, null);
-            }
+             return await _tokenAcquisition.GetAccessTokenForUserAsync(new[] { SetOptions.TodoListServiceScope });
         }
+
+        /// <summary>
+        /// Process the exception.
+        /// </summary>
+        /// <param name="exception">Exception.</param>
         public static void IncrementalConsentExceptionHandler(Exception ex)
         {
             string redirectUri = HttpContext.Current.Request.Url.ToString();
@@ -67,6 +62,13 @@ namespace TodoListWebApp
                    OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
         }
+
+        /// <summary>
+        /// Can the exception be solved by re-signing-in the user?.
+        /// </summary>
+        /// <param name="ex">Exception from which the decision will be made.</param>
+        /// <returns>Returns <c>true</c> if the issue can be solved by signing-in
+        /// the user, and <c>false</c>, otherwise.</returns>
         private static bool CanBeSolvedByReSignInOfUser(MsalUiRequiredException ex)
         {
             if (ex == null)
@@ -77,6 +79,11 @@ namespace TodoListWebApp
             // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem.
             return ex.ErrorCode.ContainsAny(new[] { MsalError.UserNullError, MsalError.InvalidGrantError });
         }
+
+        /// <summary>
+        /// Initializes OpenIdConnectAuthenticationOptions
+        /// </summary>
+        /// <returns></returns>
         public static OpenIdConnectAuthenticationOptions GetOpenIdConnectAuthenticationOptions()
         {
             return new OpenIdConnectAuthenticationOptions
@@ -98,6 +105,13 @@ namespace TodoListWebApp
                 }
             };
         }
+
+        /// <summary>
+        /// Handling the auth redemption by MSAL.NET so that a token is available in the token cache
+        /// where it will be usable through the TokenAcquisition service
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private static async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedNotification context)
         {
             // Call MSAL.NET AcquireTokenByAuthorizationCode

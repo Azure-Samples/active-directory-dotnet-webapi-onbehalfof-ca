@@ -172,6 +172,12 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
    - In the list of APIs, select the API `ToDoListService-OBO-CA-ASP.NET`.
    - In the **Delegated permissions** section, select the **Access 'ToDoListService-OBO-CA-ASP.NET'** in the list. Use the search box if necessary.
    - Select the **Add permissions** button at the bottom.
+   - Select the **Add a permission** button and then:
+   
+   - Ensure that the **Microsoft APIs** tab is selected.
+   - In the *Commonly used Microsoft APIs* section, select **Microsoft Graph**
+   - In the **Delegated permissions** section, select the **User.Read** in the list. Use the search box if necessary.
+   - Select the **Add permissions** button at the bottom.									 
 1. In the app's registration screen, select the **Expose an API** blade to the left to open the page where you can declare the parameters to expose this app as an API for which client applications can obtain [access tokens](https://docs.microsoft.com/azure/active-directory/develop/access-tokens) for.
 The first thing that we need to do is to declare the unique [resource](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow) URI that the clients will be using to obtain access tokens for this Api. To declare an resource URI, follow the following steps:
    - Select `Set` next to the **Application ID URI** to generate a URI that is unique for this app.
@@ -229,7 +235,7 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
 1. Open the `TodoListClient\App.config` file.
 1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
 1. Find the key `ida:ClientId` and replace the existing value with the application ID (clientId) of `TodoListClient` app copied from the Azure portal.
-1. Find the key `todo:TodoListServiceScope` and replace the existing value with Scope.
+1. Find the key `todo:TodoListServiceScope` and replace the existing value with default API scope.
 
 ### Register the web app (TodoListWebApp-aspnet)
 
@@ -271,7 +277,7 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
 1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
 1. Find the key `ida:ClientId` and replace the existing value with the application ID (clientId) of `TodoListWebApp-aspnet` app copied from the Azure portal.
 1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `TodoListWebApp-aspnet` copied from the Azure portal.
-1. Find the key `ida:TodoListServiceScope` and replace the existing value with Scope.
+1. Find the key `ida:TodoListServiceScope` and replace the existing value with default API scope.
 
 #### Configure Known Client Applications for service (ToDoListService-ASP.NET)
 

@@ -11,24 +11,25 @@ namespace TodoListService.Utils
 {
     public static class Common
     {
-        static TokenAcquisition _tokenAcquisition = null;
+        static TokenAcquisition _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
 
         /// <summary>
-        /// Creates an MSAL Confidential client application
+        /// Creates an MSAL Confidential client application by calling BuildConfidentialClientApplicationAsync
         /// </summary>
-        /// <param name="httpContext">HttpContext associated with the OIDC response</param>
-        /// <param name="claimsPrincipal">Identity for the signed-in user</param>
         /// <returns></returns>
         public static IConfidentialClientApplication BuildConfidentialClientApplication()
         {
-            _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
             var app = _tokenAcquisition.BuildConfidentialClientApplicationAsync().Result;
             return app;
         }
+
+        /// <summary>
+        /// Calls method to Removes the account from the MSAL.NET cache.
+        /// </summary>
+        /// <returns></returns>
         public static void RemoveAccount()
         {
-            _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
-            _tokenAcquisition.RemoveAccount().ConfigureAwait(false);
+             _tokenAcquisition.RemoveAccountAsync().ConfigureAwait(false);
         }
     }
     public class SetOptions

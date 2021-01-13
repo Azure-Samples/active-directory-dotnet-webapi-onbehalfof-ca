@@ -26,9 +26,8 @@ namespace TodoListService
 
 
         /// <summary>
-        /// The authority
+        /// Tenant Id of the tenant where the application is registered.
         /// </summary>
-       // public static string Authority = string.Format(CultureInfo.InvariantCulture, AADInstance, "common", "/v2.0");
         public static string TenantId = ConfigurationManager.AppSettings["ida:TenantId"];
 
     }

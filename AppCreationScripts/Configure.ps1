@@ -373,6 +373,12 @@ Function ConfigureApplications
 
    $requiredResourcesAccess.Add($requiredPermissions)
 
+   # Add Required Resources Access (from 'service' to 'Microsoft Graph')
+   Write-Host "Getting access from 'service' to 'Microsoft Graph'"
+   $requiredPermissions = GetRequiredPermissions -applicationDisplayName "Microsoft Graph" `
+                                                -requiredDelegatedPermissions "User.Read" `
+
+   $requiredResourcesAccess.Add($requiredPermissions)																	
 
    Set-AzureADApplication -ObjectId $serviceAadApplication.ObjectId -RequiredResourceAccess $requiredResourcesAccess
    Write-Host "Granted permissions."
@@ -500,7 +506,7 @@ Function ConfigureApplications
    ReplaceSetting -configFilePath $configFile -key "ida:ClientId" -newValue $webAppAadApplication.AppId
    #ReplaceSetting -configFilePath $configFile -key "ida:RedirectUri" -newValue $webAppAadApplication.ReplyUrls
    ReplaceSetting -configFilePath $configFile -key "ida:ClientSecret" -newValue $webAppAppKey
-   ReplaceSetting -configFilePath $configFile -key "ida:TodoListServiceScope" -newValue ("api://"+$serviceAadApplication.AppId+"/access_as_user")
+   ReplaceSetting -configFilePath $configFile -key "ida:TodoListServiceScope" -newValue ("api://"+$serviceAadApplication.AppId+"/.default")
    
    Write-Host ""
    Write-Host -ForegroundColor Green "------------------------------------------------------------------------------------------------" 

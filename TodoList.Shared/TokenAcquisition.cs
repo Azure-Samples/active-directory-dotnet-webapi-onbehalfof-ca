@@ -96,6 +96,7 @@ namespace TodoList.Shared
 
             return _application;
         }
+
         /// <summary>
         /// Creates an MSAL confidential client application.
         /// </summary>
@@ -160,6 +161,10 @@ namespace TodoList.Shared
             }
         }
 
+        /// <summary>
+        /// Initialize token cache providers on the basis of input parameter i.e., tokenCache.
+        /// </summary>
+        /// <param name="tokenCache"></param>
         private void SetCache(ITokenCache tokenCache)
         {
 
@@ -172,6 +177,12 @@ namespace TodoList.Shared
                 TokenCacheHelper.EnableSerialization(tokenCache);
             }
         }
+
+        /// <summary>
+        /// For web APIs, acquire token on-behalf-of flow with the token used to call the API
+        /// </summary>
+        /// <param name="requestedScopes"></param>
+        /// <returns></returns>
         public async Task<AuthenticationResult> GetUserTokenOnBehalfOfAsync(IEnumerable<string> requestedScopes)
         {
             string authority = $"{_applicationOptions.Instance}{_applicationOptions.TenantId}/";
@@ -187,6 +198,32 @@ namespace TodoList.Shared
                             .ExecuteAsync();
                 return result;
             
+        }
+
+        /// <summary>
+        /// For web app, gets an access token for a downstream API on behalf of the signed-in user..
+        /// </summary>
+        /// <param name="requestedScopes"></param>
+        /// <returns></returns>
+        public async Task<AuthenticationResult> GetAccessTokenForUserAsync(IEnumerable<string> requestedScopes)
+        {
+            try
+            {
+                IConfidentialClientApplication app = BuildConfidentialClientApplicationAsync().Result;
+
+                AuthenticationResult result = null;
+                IAccount account = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
+                result = await app.AcquireTokenSilent(requestedScopes, account)
+                   .ExecuteAsync();
+
+                return result;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                // Case of the web app: we let the MsalUiRequiredException be caught by the
+                // AuthorizeForScopesAttribute exception filter so that the user can consent, do 2FA, etc ...
+                throw new MicrosoftIdentityWebChallengeUserException(ex, requestedScopes.ToArray(), null);
+            }
         }
         private static bool AcceptedTokenVersionMismatch(MsalUiRequiredException msalServiceException)
         {
@@ -206,7 +243,11 @@ namespace TodoList.Shared
 
             _applicationOptions.Instance = _applicationOptions.Instance.TrimEnd('/') + "/";
         }
-        public async Task RemoveAccount()
+
+        /// <summary>
+        /// Removes the account associated with ClaimsPrincipal.Current from the MSAL.NET cache.
+        /// <returns>A <see cref="Task"/> that represents a completed account removal operation.</returns>
+        public async Task RemoveAccountAsync()
         {
             IConfidentialClientApplication app = BuildConfidentialClientApplicationAsync().Result;
 
