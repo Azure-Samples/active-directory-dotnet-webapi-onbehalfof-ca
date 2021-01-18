@@ -146,7 +146,6 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
 1. Open the `TodoListService\Web.config` file.
 1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
 1. Find the key `ida:ClientID` and replace the existing value with the application ID (clientId) of `ToDoListService-OBO-CA-ASP.NET` app copied from the Azure portal.
-																															  
 1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `ToDoListService-OBO-CA-ASP.NET` copied from the Azure portal.
 1. Find the key `ida:CAProtectedResourceScope` and replace the existing value with Scope.
 
@@ -173,11 +172,10 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
    - In the **Delegated permissions** section, select the **Access 'ToDoListService-OBO-CA-ASP.NET'** in the list. Use the search box if necessary.
    - Select the **Add permissions** button at the bottom.
    - Select the **Add a permission** button and then:
-   
    - Ensure that the **Microsoft APIs** tab is selected.
    - In the *Commonly used Microsoft APIs* section, select **Microsoft Graph**
    - In the **Delegated permissions** section, select the **User.Read** in the list. Use the search box if necessary.
-   - Select the **Add permissions** button at the bottom.									 
+   - Select the **Add permissions** button at the bottom.
 1. In the app's registration screen, select the **Expose an API** blade to the left to open the page where you can declare the parameters to expose this app as an API for which client applications can obtain [access tokens](https://docs.microsoft.com/azure/active-directory/develop/access-tokens) for.
 The first thing that we need to do is to declare the unique [resource](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow) URI that the clients will be using to obtain access tokens for this Api. To declare an resource URI, follow the following steps:
    - Select `Set` next to the **Application ID URI** to generate a URI that is unique for this app.
@@ -202,7 +200,6 @@ Open the project in your IDE (like Visual Studio or Visual Studio Code) to confi
 1. Open the `TodoListService\Web.config` file.
 1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
 1. Find the key `ida:ClientID` and replace the existing value with the application ID (clientId) of `ToDoListService-OBO-CA-ASP.NET` app copied from the Azure portal.
-																															  
 1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `ToDoListService-OBO-CA-ASP.NET` copied from the Azure portal.
 1. Find the key `ida:CAProtectedResourceScope` and replace the existing value with Scope.
 
@@ -299,6 +296,32 @@ To achieve this, you need to add the **Application Id** of the client app, in th
 
 1. **Save** the changes to the manifest.
 
+### Create and link a Conditional Access Policy
+
+1. Inside the **Azure Active Directory** window, select the **Conditional Access** button near the bottom of the list under **Security**.
+
+    ![CA1](./ReadmeFiles/ca1.png)
+
+    ![CA2](./ReadmeFiles/ca2.png)
+
+1. Select **New Policy** and name your policy.
+
+    ![CA3](./ReadmeFiles/ca3.png)
+
+1. Select the **Users and groups** button, choose **Select users and groups** in the **Include** tab.
+
+    ![CA4](./ReadmeFiles/ca4.png)
+
+1. Select the **Cloud apps**, then hit the **Select apps** radio button in the **Include** tab, and select the `ToDoListService-OBO-CA-ASP.NET`.
+
+    ![CA5](./ReadmeFiles/ca5.png)
+
+1. Finally, select the **Grant** button and hit **Grant access**. Then check the **Require multi-factor authentication** option.
+
+    ![CA6](./ReadmeFiles/ca6.png)
+
+1. Enable the policy and save. Access to your web API now requires **multi-factor authentication**!
+
 ## Running the sample
 
 > For Visual Studio Users
@@ -311,11 +334,10 @@ To achieve this, you need to add the **Application Id** of the client app, in th
 
 1. **Sign in** using Azure AD credentials. When the user signs-in for the first time , a consent screen is presented. This consent screen lets the user consent for the application to access the web API. After sign-in, you can add items to the To Do list.  The ToDo list service will take the user's access token, passed from the client, and use it to perform the On-Behalf-Of flow to access the Microsoft Graph API.
 
-![TodoListClient](./ReadmeFiles/TodoListClient.png)
-
+    ![TodoListClient](./ReadmeFiles/TodoListClient.png)
 1. If you hit the `Satisfy CA` button, the client app will do the same as above except the downstream API is not Graph.  In this case, it will request a token to the downstream web API with Conditional Access applied. The middle tier will encounter an error when attempting On-Behalf-Of, and will return back state in the `claims` parameter so the client can step up. The user will then be prompted to do MFA.
 
-![TodoListClientMFA](./ReadmeFiles/TodoListClientMFA.png)
+    ![TodoListClientMFA](./ReadmeFiles/TodoListClientMFA.png)
 
 ### Explore by using web app
 
