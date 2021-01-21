@@ -1,11 +1,7 @@
 ﻿using Microsoft.Identity.Client;
 using TodoList.Shared;
-using System;
-using System.Security.Claims;
-using System.Web;
 using System.Threading.Tasks;
 using Microsoft.Owin.Security.OpenIdConnect;
-using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Notifications;
 
 namespace TodoListWebApp
@@ -40,44 +36,6 @@ namespace TodoListWebApp
         public static async Task<AuthenticationResult> GetAccessTokenForUserAsync()
         {
              return await _tokenAcquisition.GetAccessTokenForUserAsync(new[] { SetOptions.TodoListServiceScope });
-        }
-
-        /// <summary>
-        /// Process the exception.
-        /// </summary>
-        /// <param name="exception">Exception.</param>
-        public static void IncrementalConsentExceptionHandler(Exception ex)
-        {
-            string redirectUri = HttpContext.Current.Request.Url.ToString();
-            MicrosoftIdentityWebChallengeUserException microsoftIdentityWebChallengeUserException =
-                   ex as MicrosoftIdentityWebChallengeUserException;
-            if (microsoftIdentityWebChallengeUserException == null)
-            {
-                microsoftIdentityWebChallengeUserException = ex.InnerException as MicrosoftIdentityWebChallengeUserException;
-            }
-            if (CanBeSolvedByReSignInOfUser(microsoftIdentityWebChallengeUserException.MsalUiRequiredException))
-            {
-                HttpContext.Current.GetOwinContext().Authentication.Challenge(
-                   new AuthenticationProperties { RedirectUri = redirectUri },
-                   OpenIdConnectAuthenticationDefaults.AuthenticationType);
-            }
-        }
-
-        /// <summary>
-        /// Can the exception be solved by re-signing-in the user?.
-        /// </summary>
-        /// <param name="ex">Exception from which the decision will be made.</param>
-        /// <returns>Returns <c>true</c> if the issue can be solved by signing-in
-        /// the user, and <c>false</c>, otherwise.</returns>
-        private static bool CanBeSolvedByReSignInOfUser(MsalUiRequiredException ex)
-        {
-            if (ex == null)
-            {
-                throw new ArgumentNullException(nameof(ex));
-            }
-
-            // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem.
-            return ex.ErrorCode.ContainsAny(new[] { MsalError.UserNullError, MsalError.InvalidGrantError });
         }
 
         /// <summary>
