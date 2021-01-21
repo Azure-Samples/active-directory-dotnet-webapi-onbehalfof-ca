@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListWebApp", "TodoListW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoList.Shared", "TodoList.Shared\TodoList.Shared.csproj", "{DC125D26-FA15-4A55-82C8-DD0F9536525C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyWebApplication", "MyWebApplication\MyWebApplication.csproj", "{ABE9E461-5383-4724-9B05-2B523FC516A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Web.Aspnet", "Microsoft.Identity.Web.Aspnet\Microsoft.Identity.Web.Aspnet.csproj", "{16C31491-E7D6-4D70-B044-7B46875F6001}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{DC125D26-FA15-4A55-82C8-DD0F9536525C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC125D26-FA15-4A55-82C8-DD0F9536525C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC125D26-FA15-4A55-82C8-DD0F9536525C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABE9E461-5383-4724-9B05-2B523FC516A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABE9E461-5383-4724-9B05-2B523FC516A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABE9E461-5383-4724-9B05-2B523FC516A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABE9E461-5383-4724-9B05-2B523FC516A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16C31491-E7D6-4D70-B044-7B46875F6001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16C31491-E7D6-4D70-B044-7B46875F6001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16C31491-E7D6-4D70-B044-7B46875F6001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16C31491-E7D6-4D70-B044-7B46875F6001}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
