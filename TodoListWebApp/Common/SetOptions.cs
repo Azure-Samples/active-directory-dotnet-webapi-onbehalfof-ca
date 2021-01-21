@@ -6,14 +6,13 @@ namespace TodoListWebApp
 {
     public class SetOptions
     {
-        public static string instance = ConfigurationManager.AppSettings["ida:Instance"];
-        public static string TodoListServiceScope = ConfigurationManager.AppSettings["ida:TodoListServiceScope"];
+       
         private static MicrosoftIdentityOptions IdentityOptions = new MicrosoftIdentityOptions();
         private static ConfidentialClientApplicationOptions ApplicationOptions = new ConfidentialClientApplicationOptions();
 
         public static ConfidentialClientApplicationOptions SetConClientAppOptions()
         {
-            ApplicationOptions.Instance = instance;
+            ApplicationOptions.Instance = AuthenticationConfig.AADInstance;
             ApplicationOptions.TenantId = AuthenticationConfig.TenantId;
             ApplicationOptions.RedirectUri = AuthenticationConfig.RedirectUri;
             ApplicationOptions.ClientId = AuthenticationConfig.ClientId;

@@ -31,5 +31,9 @@ namespace TodoListWebApp
         public static string Authority = String.Format(CultureInfo.InvariantCulture, AADInstance, TenantId);
       
         public static string PostLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
+
+        //public static string Instance = ConfigurationManager.AppSettings["ida:Instance"];
+
+        public static string TodoListServiceScope = ConfigurationManager.AppSettings["ida:TodoListServiceScope"];
     }
 }

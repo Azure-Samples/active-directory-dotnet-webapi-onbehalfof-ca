@@ -318,6 +318,7 @@
     <Compile Include="App_Start\StartupAuth.cs" />
     <Compile Include="Common\AuthenticationConfig.cs" />
     <Compile Include="Common\Common.cs" />
+    <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\SetOptions.cs" />
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>

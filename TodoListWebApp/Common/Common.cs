@@ -35,33 +35,44 @@ namespace TodoListWebApp
         /// <returns></returns>
         public static async Task<AuthenticationResult> GetAccessTokenForUserAsync()
         {
-             return await _tokenAcquisition.GetAccessTokenForUserAsync(new[] { SetOptions.TodoListServiceScope });
+            return await _tokenAcquisition.GetAccessTokenForUserAsync(new[] { AuthenticationConfig.TodoListServiceScope });
         }
 
         /// <summary>
-        /// Initializes OpenIdConnectAuthenticationOptions
+        /// Process the exception.
         /// </summary>
-        /// <returns></returns>
-        public static OpenIdConnectAuthenticationOptions GetOpenIdConnectAuthenticationOptions()
+        /// <param name="exception">Exception.</param>
+        public static void IncrementalConsentExceptionHandler(Exception ex)
         {
-            return new OpenIdConnectAuthenticationOptions
+            string redirectUri = HttpContext.Current.Request.Url.ToString();
+            MicrosoftIdentityWebChallengeUserException microsoftIdentityWebChallengeUserException = ex as MicrosoftIdentityWebChallengeUserException;
+            if (microsoftIdentityWebChallengeUserException == null)
             {
-                ClientId = AuthenticationConfig.ClientId,
-                ClientSecret = AuthenticationConfig.ClientSecret,
-                Authority = AuthenticationConfig.Authority,
-                RedirectUri = AuthenticationConfig.PostLogoutRedirectUri,
-                PostLogoutRedirectUri = AuthenticationConfig.PostLogoutRedirectUri,
-                ResponseType = "code",
-                Scope = "openid profile offline_access " + SetOptions.TodoListServiceScope,
-                Notifications = new OpenIdConnectAuthenticationNotifications()
-                {
-                    AuthorizationCodeReceived = OnAuthorizationCodeReceived,
-                    AuthenticationFailed = (context) =>
-                    {
-                        return Task.FromResult(0);
-                    }
-                }
-            };
+                microsoftIdentityWebChallengeUserException = ex.InnerException as MicrosoftIdentityWebChallengeUserException;
+            }
+            if (CanBeSolvedByReSignInOfUser(microsoftIdentityWebChallengeUserException.MsalUiRequiredException))
+            {
+                HttpContext.Current.GetOwinContext().Authentication.Challenge(
+                   new AuthenticationProperties { RedirectUri = redirectUri },
+                   OpenIdConnectAuthenticationDefaults.AuthenticationType);
+            }
+        }
+
+        /// <summary>
+        /// Can the exception be solved by re-signing-in the user?.
+        /// </summary>
+        /// <param name="ex">Exception from which the decision will be made.</param>
+        /// <returns>Returns <c>true</c> if the issue can be solved by signing-in
+        /// the user, and <c>false</c>, otherwise.</returns>
+        private static bool CanBeSolvedByReSignInOfUser(MsalUiRequiredException ex)
+        {
+            if (ex == null)
+            {
+                throw new ArgumentNullException(nameof(ex));
+            }
+
+            // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem.
+            return ex.ErrorCode.ContainsAny(new[] { MsalError.UserNullError, MsalError.InvalidGrantError });
         }
 
         /// <summary>
@@ -74,7 +85,7 @@ namespace TodoListWebApp
         {
             // Call MSAL.NET AcquireTokenByAuthorizationCode
             var application = BuildConfidentialClientApplication();
-            var result = await application.AcquireTokenByAuthorizationCode(new[] { SetOptions.TodoListServiceScope },
+            var result = await application.AcquireTokenByAuthorizationCode(new[] { AuthenticationConfig.TodoListServiceScope },
                                                                      context.ProtocolMessage.Code)
                                     .ExecuteAsync();
 

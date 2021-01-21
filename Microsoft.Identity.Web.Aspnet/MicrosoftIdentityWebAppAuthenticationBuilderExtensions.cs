@@ -17,6 +17,11 @@ namespace Microsoft.Identity.Web.Aspnet
     /// </summary>
     public static class MicrosoftIdentityWebAppAuthenticationBuilderExtensions
     {
+        /// <summary>
+        /// Configures the web application to just sign-in a user and get an id_token
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="authenticationConfig"></param>
         public static void AddMicrosoftIdentityWebAppAuthentication(this IAppBuilder app, AuthenticationConfig authenticationConfig)
         {
             app.UseOpenIdConnectAuthentication(
