@@ -238,7 +238,6 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\AccessCaApiController.cs" />
     <Compile Include="Controllers\TodoListController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="DAL\DbTokenCache.cs" />
@@ -251,8 +250,6 @@
     <Compile Include="Models\UserProfile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="Utils\AuthenticationConfig.cs" />
-    <Compile Include="Utils\Common.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -422,6 +419,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Utils\" />
     <Folder Include="Views\ConditionalAccess\" />
     <Folder Include="Views\TodoList\" />
   </ItemGroup>
@@ -436,9 +434,9 @@
     <TypeScriptCompile Include="Scripts\index.d.ts" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TodoList.Shared\TodoList.Shared.csproj">
-      <Project>{dc125d26-fa15-4a55-82c8-dd0f9536525c}</Project>
-      <Name>TodoList.Shared</Name>
+    <ProjectReference Include="..\Microsoft.Identity.Web.Aspnet\Microsoft.Identity.Web.Aspnet.csproj">
+      <Project>{16c31491-e7d6-4d70-b044-7b46875f6001}</Project>
+      <Name>Microsoft.Identity.Web.Aspnet</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

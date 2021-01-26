@@ -33,7 +33,7 @@ namespace Microsoft.Identity.Web.Aspnet
         /// <summary>
         /// The instance of Azure Ad the user is trying to sign-in to
         /// </summary>
-        public string AADInstance { get; } = ConfigurationManager.AppSettings["ida:AADInstance"];
+        public string AADInstance { get; } = ConfigurationManager.AppSettings["ida:Instance"];
 
         /// <summary>
         /// The Id of the Azure AD tenant
@@ -60,33 +60,9 @@ namespace Microsoft.Identity.Web.Aspnet
 
         public AuthenticationConfig()
         {
-            this.authority = EnsureAuthorityIsV2($"{EnsureTrailingSlash(AADInstance)}{TenantId}/v2.0");
+            this.authority = CommonUtil.EnsureAuthorityIsV2($"{CommonUtil.EnsureTrailingSlash(AADInstance)}{TenantId}/v2.0");
         }
 
-        private string EnsureAuthorityIsV2(string authority)
-        {
-            authority = authority.Trim().TrimEnd('/');
-            if (!authority.EndsWith("v2.0", StringComparison.InvariantCulture))
-            {
-                authority += "/v2.0";
-            }
-
-            return authority;
-        }
-
-        private string EnsureTrailingSlash(string value)
-        {
-            if (value == null)
-            {
-                value = string.Empty;
-            }
-
-            if (!value.EndsWith("/", StringComparison.Ordinal))
-            {
-                return value + "/";
-            }
-
-            return value;
-        }
+        
     }
 }

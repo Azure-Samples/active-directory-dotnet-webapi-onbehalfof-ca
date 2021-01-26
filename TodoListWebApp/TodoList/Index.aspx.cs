@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Web.UI.WebControls;
-using TodoList.Shared;
+//using TodoList.Shared;
 using TodoListWebApp.Models;
 
 namespace TodoListWebApp.TodoList
@@ -29,7 +29,8 @@ namespace TodoListWebApp.TodoList
             }
             catch (Exception ex)
             {
-                MicrosoftIdentityExceptionHandler.IncrementalConsentExceptionHandler(ex);
+                //MicrosoftIdentityExceptionHandler.IncrementalConsentExceptionHandler(ex);
+                throw ex;
             }
         }
 

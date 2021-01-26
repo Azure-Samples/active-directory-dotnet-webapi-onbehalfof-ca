@@ -15,7 +15,7 @@ namespace TodoListWebApp
         }
         protected void LogOut_Click(object sender, LoginCancelEventArgs e)
         {
-             Common.RemoveAccount();
+             //Common.RemoveAccount();
             // Redirect to ~/Account/SignOut after signing out.
             string callbackUrl = Request.Url.GetLeftPart(UriPartial.Authority) + Response.ApplyAppPathModifier("~/Account/SignOut");
 

@@ -41,8 +41,9 @@ using Newtonsoft.Json;
 using System.Threading;
 using TodoListService.DAL;
 using System.Web.Http.Cors;
-using TodoListService.Utils;
-using TodoList.Shared;
+//using TodoListService.Utils;
+using Microsoft.Identity.Web.Aspnet;
+//using TodoList.Shared;
 
 namespace TodoListService.Controllers
 {
@@ -130,7 +131,8 @@ namespace TodoListService.Controllers
                 retry = false;
                 try
                 {
-                    _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
+                    //_tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
+                    _tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
                     result = await _tokenAcquisition.GetUserTokenOnBehalfOfAsync(requestedScopes);
                     accessToken = result.AccessToken;
                 }

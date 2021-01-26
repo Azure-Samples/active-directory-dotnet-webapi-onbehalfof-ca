@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using TodoListWebApp.Models;
+using Microsoft.Identity.Web.Aspnet;
+using System.Configuration;
 
 namespace TodoListWebApp.TodoList
 {
@@ -75,9 +77,11 @@ namespace TodoListWebApp.TodoList
         private async Task PrepareAuthenticatedClientAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
+            TokenAcquisition tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
 
             // Retrieves the Access Token for the Web API
-            var result = await Common.GetAccessTokenForUserAsync();
+            string[] scopes = new[] { ConfigurationManager.AppSettings["ida:TodoListServiceScope"] };
+            var result = await tokenAcquisition.GetAccessTokenForUserAsync(scopes);
             
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);

@@ -316,10 +316,8 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\StartupAuth.cs" />
-    <Compile Include="Common\AuthenticationConfig.cs" />
     <Compile Include="Common\Common.cs" />
     <Compile Include="Common\Constants.cs" />
-    <Compile Include="Common\SetOptions.cs" />
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -394,9 +392,9 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TodoList.Shared\TodoList.Shared.csproj">
-      <Project>{dc125d26-fa15-4a55-82c8-dd0f9536525c}</Project>
-      <Name>TodoList.Shared</Name>
+    <ProjectReference Include="..\Microsoft.Identity.Web.Aspnet\Microsoft.Identity.Web.Aspnet.csproj">
+      <Project>{16c31491-e7d6-4d70-b044-7b46875f6001}</Project>
+      <Name>Microsoft.Identity.Web.Aspnet</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
