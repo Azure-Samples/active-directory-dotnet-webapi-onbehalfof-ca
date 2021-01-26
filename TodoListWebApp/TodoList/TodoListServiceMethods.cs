@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Identity.Web.Aspnet;
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using TodoListWebApp.Models;
-using Microsoft.Identity.Web.Aspnet;
-using System.Configuration;
 
 namespace TodoListWebApp.TodoList
 {
@@ -32,6 +32,7 @@ namespace TodoListWebApp.TodoList
 
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
+
         /// <summary>
         /// Add a new ToDo item
         /// </summary>
@@ -41,7 +42,7 @@ namespace TodoListWebApp.TodoList
         {
             PrepareAuthenticatedClientAsync().ConfigureAwait(false);
             var jsoncontent = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("Title", TodoText) });
-            var response =  _httpClient.PostAsync($"{ _TodoListBaseAddress}/api/todolist", jsoncontent).Result;
+            var response = _httpClient.PostAsync($"{ _TodoListBaseAddress}/api/todolist", jsoncontent).Result;
 
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
@@ -82,7 +83,7 @@ namespace TodoListWebApp.TodoList
             // Retrieves the Access Token for the Web API
             string[] scopes = new[] { ConfigurationManager.AppSettings["ida:TodoListServiceScope"] };
             var result = await tokenAcquisition.GetAccessTokenForUserAsync(scopes);
-            
+
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

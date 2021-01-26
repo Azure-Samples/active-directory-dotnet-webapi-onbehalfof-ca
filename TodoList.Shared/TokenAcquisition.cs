@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Microsoft.Extensions.Primitives;
+using Microsoft.Identity.Client;
+using Microsoft.Net.Http.Headers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Extensions.Primitives;
-using Microsoft.Identity.Client;
-using Microsoft.Net.Http.Headers;
 using TodoList.Shared.TokenCacheProviders;
 
 namespace TodoList.Shared
@@ -16,15 +16,17 @@ namespace TodoList.Shared
     {
         private IConfidentialClientApplication _application;
 
-        private readonly MicrosoftIdentityOptions _microsoftIdentityOptions=new MicrosoftIdentityOptions();
-        private readonly ConfidentialClientApplicationOptions _applicationOptions=new ConfidentialClientApplicationOptions();
-        CacheType _cacheType;
+        private readonly MicrosoftIdentityOptions _microsoftIdentityOptions = new MicrosoftIdentityOptions();
+        private readonly ConfidentialClientApplicationOptions _applicationOptions = new ConfidentialClientApplicationOptions();
+        private CacheType _cacheType;
+
         public TokenAcquisition(MicrosoftIdentityOptions microsoftIdentityOptions, ConfidentialClientApplicationOptions applicationOptions)
 
         {
             _microsoftIdentityOptions = microsoftIdentityOptions;
-            _applicationOptions=applicationOptions;
+            _applicationOptions = applicationOptions;
         }
+
         public TokenAcquisition(MicrosoftIdentityOptions microsoftIdentityOptions, ConfidentialClientApplicationOptions applicationOptions, CacheType cacheType)
 
         {
@@ -32,6 +34,7 @@ namespace TodoList.Shared
             _applicationOptions = applicationOptions;
             _cacheType = cacheType;
         }
+
         /// <summary>
         /// Used in web APIs (no user interaction).
         /// Replies to the client through the HTTP response by sending a 403 (forbidden) and populating the 'WWW-Authenticate' header so that
@@ -53,13 +56,11 @@ namespace TodoList.Shared
             _application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
             try
             {
+                string consentUrl = $"{_application.Authority}/oauth2/v2.0/authorize?client_id={_applicationOptions.ClientId}"
+                    + $"&response_type=code&redirect_uri={_application.AppConfig.RedirectUri}"
+                    + $"&response_mode=query&scope=offline_access%20{string.Join("%20", scopes)}";
 
-          
-            string consentUrl = $"{_application.Authority}/oauth2/v2.0/authorize?client_id={_applicationOptions.ClientId}"
-                + $"&response_type=code&redirect_uri={_application.AppConfig.RedirectUri}"
-                + $"&response_mode=query&scope=offline_access%20{string.Join("%20", scopes)}";
-
-            IDictionary<string, string> parameters = new Dictionary<string, string>()
+                IDictionary<string, string> parameters = new Dictionary<string, string>()
                 {
                     { Constants.ConsentUrl, consentUrl },
                     { Constants.Claims, msalServiceException.Claims },
@@ -67,8 +68,7 @@ namespace TodoList.Shared
                     { Constants.ProposedAction, proposedAction },
                 };
 
-            string parameterString = string.Join(", ", parameters.Select(p => $"{p.Key}=\"{p.Value}\""));
-
+                string parameterString = string.Join(", ", parameters.Select(p => $"{p.Key}=\"{p.Value}\""));
 
                 if (httpResponse == null)
                 {
@@ -79,7 +79,6 @@ namespace TodoList.Shared
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
 
                 headers[HeaderNames.WWWAuthenticate] = new StringValues($"{Constants.Bearer} {parameterString}");
-
             }
             catch (Exception ex)
             {
@@ -145,7 +144,6 @@ namespace TodoList.Shared
                 authority = $"{_applicationOptions.Instance}{_applicationOptions.TenantId}/";
                 builder.WithAuthority(authority);
 
-
                 IConfidentialClientApplication app = builder.Build();
                 _application = app;
 
@@ -167,7 +165,6 @@ namespace TodoList.Shared
         /// <param name="tokenCache"></param>
         private void SetCache(ITokenCache tokenCache)
         {
-
             if (_cacheType == CacheType.InMemoryCache)
             {
                 MSALPerUserMemoryCache mSALPerUserMemoryCache = new MSALPerUserMemoryCache(tokenCache);
@@ -193,11 +190,10 @@ namespace TodoList.Shared
 
             string userAccessToken = (string)bootstrapContext;
             UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer");
-                var result = await app.AcquireTokenOnBehalfOf(requestedScopes, userAssertion)
-                            .WithAuthority(authority)
-                            .ExecuteAsync();
-                return result;
-            
+            var result = await app.AcquireTokenOnBehalfOf(requestedScopes, userAssertion)
+                        .WithAuthority(authority)
+                        .ExecuteAsync();
+            return result;
         }
 
         /// <summary>
@@ -225,6 +221,7 @@ namespace TodoList.Shared
                 throw new MicrosoftIdentityWebChallengeUserException(ex, requestedScopes.ToArray(), null);
             }
         }
+
         private static bool AcceptedTokenVersionMismatch(MsalUiRequiredException msalServiceException)
         {
             // Normally app developers should not make decisions based on the internal AAD code
@@ -234,6 +231,7 @@ namespace TodoList.Shared
             return msalServiceException.Message.Contains(
                 ErrorCodes.B2CPasswordResetErrorCode);
         }
+
         private void PrepareAuthorityInstanceForMsal()
         {
             if (_microsoftIdentityOptions.IsB2C && _applicationOptions.Instance.EndsWith("/tfp/"))
@@ -253,7 +251,7 @@ namespace TodoList.Shared
 
             // We only clear the user's tokens.
             SetCache(app.UserTokenCache);
-            
+
             var userAccount = await app.GetAccountAsync(ClaimsPrincipal.Current.GetAccountId());
             if (userAccount != null)
             {

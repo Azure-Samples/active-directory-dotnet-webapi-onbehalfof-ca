@@ -22,43 +22,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microsoft.Identity.Client;
+
+//using TodoListService.Utils;
+using Microsoft.Identity.Web.Aspnet;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Cors;
+using TodoListService.DAL;
 
 // The following using statements were added for this sample.
 using TodoListService.Models;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.Configuration;
-using Microsoft.Identity.Client;
-using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using System.Threading;
-using TodoListService.DAL;
-using System.Web.Http.Cors;
-//using TodoListService.Utils;
-using Microsoft.Identity.Web.Aspnet;
+
 //using TodoList.Shared;
 
 namespace TodoListService.Controllers
 {
     [Authorize]
     [EnableCors(origins: "*", headers: "*", methods: "*")]
-
     public class TodoListController : ApiController
     {
-        static TokenAcquisition _tokenAcquisition = null;
-       
+        private static TokenAcquisition _tokenAcquisition = null;
+
         //
         // To authenticate to the Graph API, the app needs to know the Grah API's App ID URI.
         // To contact the Me endpoint on the Graph API we need the URL as well.
         //
         private static string graphUserUrl = ConfigurationManager.AppSettings["ida:GraphUserUrl"];
+
         private static IEnumerable<string> requestedScopes = new List<string> { ConfigurationManager.AppSettings["ida:GraphScope"] };
 
         //
@@ -67,7 +68,7 @@ namespace TodoListService.Controllers
         private TodoListServiceContext db = new TodoListServiceContext();
 
         // Error Constants
-        const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
+        private const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
 
         // GET api/todolist
         public IEnumerable<TodoItem> Get()

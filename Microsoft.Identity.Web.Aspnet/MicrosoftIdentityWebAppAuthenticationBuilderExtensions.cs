@@ -51,7 +51,7 @@ namespace Microsoft.Identity.Web.Aspnet
                         AuthorizationCodeReceived = async context =>
                         {
                             // Call MSAL.NET AcquireTokenByAuthorizationCode
-                            var application = applicationBuilders.BuildConfidentialClientApplicationAsync(authenticationConfig);
+                            var application = applicationBuilders.BuildConfidentialClientApplication(authenticationConfig);
                             var result = await application.AcquireTokenByAuthorizationCode(initialScopes, context.ProtocolMessage.Code)
                                                     .ExecuteAsync();
 

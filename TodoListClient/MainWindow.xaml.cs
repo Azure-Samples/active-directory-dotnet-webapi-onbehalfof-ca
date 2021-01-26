@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+
 // The following using statements were added for this sample.
 using System.Globalization;
 using System.Linq;
@@ -62,6 +63,7 @@ namespace TodoListClient
         // The Authority is the sign-in URL of the tenant.
         //
         private static string aadInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
+
         private static string tenant = ConfigurationManager.AppSettings["ida:TenantId"];
         private static string clientId = ConfigurationManager.AppSettings["ida:ClientId"];
 
@@ -72,14 +74,16 @@ namespace TodoListClient
         // To contact the To Do list service we need it's URL as well.
         //
         private static string todoListBaseAddress = ConfigurationManager.AppSettings["todo:TodoListBaseAddress"];
+
         private static string[] scopes = { ConfigurationManager.AppSettings["todo:TodoListServiceScope"] };
 
         private HttpClient httpClient = new HttpClient();
         private IPublicClientApplication _app = null;
 
         // Button strings
-        const string signInString = "Sign In";
-        const string clearCacheString = "Clear Cache";
+        private const string signInString = "Sign In";
+
+        private const string clearCacheString = "Clear Cache";
 
         public MainWindow()
         {
@@ -96,7 +100,7 @@ namespace TodoListClient
 
         private void GetTodoList()
         {
-             GetTodoList(SignInButton.Content.ToString() != clearCacheString);
+            GetTodoList(SignInButton.Content.ToString() != clearCacheString);
         }
 
         private async Task GetTodoList(bool isAppStarting)
@@ -146,7 +150,6 @@ namespace TodoListClient
 
             if (response.IsSuccessStatusCode)
             {
-
                 // Read the response and databind to the GridView to display To Do items.
                 string s = await response.Content.ReadAsStringAsync();
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
@@ -238,7 +241,7 @@ namespace TodoListClient
             {
                 TodoList.ItemsSource = string.Empty;
                 FileCache.Clear();
-                
+
                 while (accounts.Any())
                 {
                     await _app.RemoveAsync(accounts.First());
@@ -286,7 +289,6 @@ namespace TodoListClient
 
                 return;
             }
-
         }
 
         // Set user name to text box
@@ -300,8 +302,8 @@ namespace TodoListClient
             UserName.Content = userName;
         }
 
-        const String INTERACTION_REQUIRED = "interaction_required";
-        const String USER_CANCELED = "authentication_canceled";
+        private const String INTERACTION_REQUIRED = "interaction_required";
+        private const String USER_CANCELED = "authentication_canceled";
 
         private async void AccessCAWebAPI(object sender, RoutedEventArgs e)
         {
@@ -344,8 +346,8 @@ namespace TodoListClient
 
             if (response.IsSuccessStatusCode)
             {
-                // User's token has already had an interactive auth with CA Policy 
-                // Call to our api was successful 
+                // User's token has already had an interactive auth with CA Policy
+                // Call to our api was successful
                 MessageBox.Show("We already Stepped-up.  Successfully called CA protected Web API");
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && response.ReasonPhrase == INTERACTION_REQUIRED)
@@ -376,7 +378,6 @@ namespace TodoListClient
                 }
                 catch (MsalException ex)
                 {
-
                     // An unexpected error occurred.
                     string message = ex.Message;
                     if (ex.InnerException != null)
@@ -388,14 +389,13 @@ namespace TodoListClient
                     return;
                 }
 
-                // Valid Access token in result, call our api with new token 
+                // Valid Access token in result, call our api with new token
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
                 HttpResponseMessage responseCA = await httpClient.GetAsync(todoListBaseAddress + "/api/AccessCaApi");
 
                 if (responseCA.IsSuccessStatusCode)
                 {
                     MessageBox.Show("Successfully called CA-Protected Web API");
-
                 }
                 else
                 {
@@ -445,6 +445,5 @@ namespace TodoListClient
                 return;
             }
         }
-
     }
 }

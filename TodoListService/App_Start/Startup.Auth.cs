@@ -1,7 +1,5 @@
-﻿using Microsoft.Owin.Security.ActiveDirectory;
+﻿using Microsoft.Identity.Web.Aspnet;
 using Owin;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Identity.Web.Aspnet;
 
 namespace TodoListService
 {
@@ -19,7 +17,7 @@ namespace TodoListService
             //            SaveSigninToken = true,
             //            ValidAudiences = new [] { AuthenticationConfig.ClientId, $"api://{AuthenticationConfig.ClientId}" },
             //        }
-            //    }); 
+            //    });
 
             app.ProtectWebApiWithMicrosoftIdentity(new JwtBearerOptions());
         }

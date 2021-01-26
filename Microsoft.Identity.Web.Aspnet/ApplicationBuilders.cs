@@ -1,9 +1,4 @@
 ﻿using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -17,12 +12,6 @@ namespace Microsoft.Identity.Web.Aspnet
 
         public CacheType CacheType { get; set; }
 
-        public ApplicationBuilders(IMsalTokenCacheProvider userTokenCache = null, IMsalTokenCacheProvider applicationtokenCache = null)
-        {
-            this.userTokenCache = userTokenCache;
-            this.applicationtokenCache = applicationtokenCache;
-        }
-
         public ApplicationBuilders(CacheType cacheType)
         {
             this.CacheType = CacheType;
@@ -34,17 +23,20 @@ namespace Microsoft.Identity.Web.Aspnet
             {
                 case CacheType.DistributedCache:
                     break;
+
                 case CacheType.FileCache:
                     break;
+
                 case CacheType.InMemoryCache:
                     userTokenCache = new MSALUserTokenMemoryCache(cache);
                     break;
+
                 default:
                     break;
             }
         }
 
-        public IConfidentialClientApplication BuildConfidentialClientApplicationAsync(AuthenticationConfig config)//, IMsalTokenCacheProvider userTokencacheProvider, IMsalTokenCacheProvider appTokencacheProvider)
+        public IConfidentialClientApplication BuildConfidentialClientApplication(AuthenticationConfig config)//, IMsalTokenCacheProvider userTokencacheProvider, IMsalTokenCacheProvider appTokencacheProvider)
         {
             var app = ConfidentialClientApplicationBuilder.Create(config.ClientId)
                 .WithRedirectUri(config.RedirectUri)

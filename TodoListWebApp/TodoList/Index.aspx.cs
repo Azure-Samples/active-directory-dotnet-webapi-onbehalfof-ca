@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Web.UI.WebControls;
+
 //using TodoList.Shared;
 using TodoListWebApp.Models;
 
@@ -9,7 +10,8 @@ namespace TodoListWebApp.TodoList
     public partial class Index : System.Web.UI.Page
     {
         private List<TodoItem> toDoArray = new List<TodoItem>();
-        TodoListServiceMethods ToDoListService = new TodoListServiceMethods();
+        private TodoListServiceMethods ToDoListService = new TodoListServiceMethods();
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!Page.IsPostBack)
@@ -17,6 +19,7 @@ namespace TodoListWebApp.TodoList
                 CallAPI();
             }
         }
+
         /// <summary>
         /// Call method to bind gridview.
         /// Handles MSALUIRequiredException by calling IncrementalConsentExceptionHandler method.
@@ -46,6 +49,7 @@ namespace TodoListWebApp.TodoList
                 grdTodoList.DataBind();
             }
         }
+
         protected void grdTodoList_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
             GridViewRow row = (GridViewRow)grdTodoList.Rows[e.RowIndex];

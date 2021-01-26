@@ -76,6 +76,7 @@ namespace Microsoft.Identity.Web.Aspnet
 
             return null;
         }
+
         /// <summary>
         /// Gets the login-hint associated with a <see cref="ClaimsPrincipal"/>.
         /// </summary>
@@ -85,6 +86,7 @@ namespace Microsoft.Identity.Web.Aspnet
         {
             return GetDisplayName(claimsPrincipal);
         }
+
         /// <summary>
         /// Get the display name for the signed-in user, from the <see cref="ClaimsPrincipal"/>.
         /// </summary>
@@ -118,6 +120,7 @@ namespace Microsoft.Identity.Web.Aspnet
             // Finally falling back to name
             return claimsPrincipal.FindFirst(ClaimConstants.Name).Value;
         }
+
         /// <summary>
         /// Gets the domain-hint associated with an identity.
         /// </summary>

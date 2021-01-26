@@ -1,11 +1,8 @@
-﻿using Microsoft.Owin.Extensions;
+﻿using Microsoft.Identity.Web.Aspnet;
+using Microsoft.Owin.Extensions;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.Notifications;
-using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
-using System.Threading.Tasks;
-using Microsoft.Identity.Web.Aspnet;
 using System.Configuration;
 
 namespace TodoListWebApp

@@ -1,11 +1,4 @@
-﻿using Microsoft.Identity.Client;
-//using TodoList.Shared;
-using System.Threading.Tasks;
-using Microsoft.Owin.Security.OpenIdConnect;
-using Microsoft.Owin.Security.Notifications;
-using System.Web;
-using System;
-using Microsoft.Owin.Security;
+﻿//using TodoList.Shared;
 
 namespace TodoListWebApp
 {

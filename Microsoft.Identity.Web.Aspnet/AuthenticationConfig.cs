@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Configuration;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -38,7 +31,7 @@ namespace Microsoft.Identity.Web.Aspnet
         /// <summary>
         /// The Id of the Azure AD tenant
         /// </summary>
-        public string TenantId { get; }  = ConfigurationManager.AppSettings["ida:TenantId"];
+        public string TenantId { get; } = ConfigurationManager.AppSettings["ida:TenantId"];
 
         /// <summary>
         /// The domain of the Azure AD tenant
@@ -49,7 +42,6 @@ namespace Microsoft.Identity.Web.Aspnet
         /// Post logout url to redirect to.
         /// </summary>
         public string PostLogoutRedirectUri { get; } = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
-
 
         private string authority;
 
@@ -62,7 +54,5 @@ namespace Microsoft.Identity.Web.Aspnet
         {
             this.authority = CommonUtil.EnsureAuthorityIsV2($"{CommonUtil.EnsureTrailingSlash(AADInstance)}{TenantId}/v2.0");
         }
-
-        
     }
 }

@@ -31,8 +31,6 @@ namespace Microsoft.Identity.Web.Aspnet
         /// </summary>
         public string Domain { get; } = ConfigurationManager.AppSettings["ida:Domain"];
 
-
-
         private string authority;
 
         /// <summary>

@@ -1,6 +1,6 @@
-﻿using System.Runtime.Caching;
-using Microsoft.Identity.Client;
+﻿using Microsoft.Identity.Client;
 using System;
+using System.Runtime.Caching;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -61,7 +61,6 @@ namespace Microsoft.Identity.Web.Aspnet
 
             tokenCache.SetBeforeAccessAsync(OnBeforeAccessAsync);
             tokenCache.SetAfterAccessAsync(OnAfterAccessAsync);
-
 
             return Task.CompletedTask;
         }

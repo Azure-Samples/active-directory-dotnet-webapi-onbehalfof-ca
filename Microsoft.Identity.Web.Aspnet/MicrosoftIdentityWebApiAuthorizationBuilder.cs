@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Owin.Security.OpenIdConnect;
-using Owin;
+﻿using Microsoft.IdentityModel.Tokens;
 using Microsoft.Owin.Security.ActiveDirectory;
-using Microsoft.IdentityModel.Tokens;
+using Owin;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -22,7 +16,7 @@ namespace Microsoft.Identity.Web.Aspnet
             app.UseWindowsAzureActiveDirectoryBearerAuthentication(
                 new WindowsAzureActiveDirectoryBearerAuthenticationOptions
                 {
-                    Tenant = webApiConfig.TenantId,                     
+                    Tenant = webApiConfig.TenantId,
                     TokenValidationParameters = new TokenValidationParameters
                     {
                         SaveSigninToken = true,

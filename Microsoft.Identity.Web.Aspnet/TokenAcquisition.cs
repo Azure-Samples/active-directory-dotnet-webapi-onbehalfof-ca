@@ -1,8 +1,8 @@
 ﻿using Microsoft.Identity.Client;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -10,23 +10,33 @@ namespace Microsoft.Identity.Web.Aspnet
     {
         private IConfidentialClientApplication _application;
 
+        private CacheType CacheType = CacheType.InMemoryCache;
+
         public AuthenticationConfig AuthenticationConfig { get; }
 
-        public TokenAcquisition(AuthenticationConfig authConfig)
+        public TokenAcquisition(AuthenticationConfig authConfig, CacheType cacheType = CacheType.InMemoryCache)
         {
             this.AuthenticationConfig = authConfig;
+        }
 
-            ConfidentialClientApplicationOptions confidentialClientOptions = new ConfidentialClientApplicationOptions()
+        public void PrepareConfidentialClientInstanceAsync()
+        {
+            if (this._application == null)
             {
-                ClientId = authConfig.ClientId,
-                ClientSecret = authConfig.ClientSecret,
-                EnablePiiLogging = true,
-                Instance = authConfig.AADInstance,
-                RedirectUri = authConfig.RedirectUri,
-                TenantId = authConfig.RedirectUri
-            };
+                var appBuilder = new ApplicationBuilders(this.CacheType);
+                //ConfidentialClientApplicationOptions confidentialClientOptions = new ConfidentialClientApplicationOptions()
+                //{
+                //    ClientId = authConfig.ClientId,
+                //    ClientSecret = authConfig.ClientSecret,
+                //    EnablePiiLogging = true,
+                //    Instance = authConfig.AADInstance,
+                //    RedirectUri = authConfig.RedirectUri,
+                //    TenantId = authConfig.RedirectUri
+                //};
 
-            this._application = ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(confidentialClientOptions).Build();
+                // this._application = ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(confidentialClientOptions).Build();
+                this._application = appBuilder.BuildConfidentialClientApplication(this.AuthenticationConfig);
+            }
         }
 
         /// <summary>
@@ -37,6 +47,7 @@ namespace Microsoft.Identity.Web.Aspnet
         public async Task<AuthenticationResult> GetAccessTokenForUserAsync(IEnumerable<string> requestedScopes)
         {
             AuthenticationResult result = null;
+            this.PrepareConfidentialClientInstanceAsync();
 
             try
             {
@@ -55,8 +66,7 @@ namespace Microsoft.Identity.Web.Aspnet
                 throw ex;
             }
 
-            return result;
-
+            return null;
         }
 
         /// <summary>
@@ -67,6 +77,7 @@ namespace Microsoft.Identity.Web.Aspnet
         public async Task<AuthenticationResult> GetUserTokenOnBehalfOfAsync(IEnumerable<string> requestedScopes)
         {
             string authority = $"{AuthenticationConfig.AADInstance}{AuthenticationConfig.TenantId}/";
+            this.PrepareConfidentialClientInstanceAsync();
 
             //IConfidentialClientApplication app = await BuildConfidentialClientApplicationAsync();
 
@@ -78,7 +89,6 @@ namespace Microsoft.Identity.Web.Aspnet
                         .WithAuthority(authority)
                         .ExecuteAsync();
             return result;
-
         }
     }
 }

@@ -13,9 +13,10 @@ namespace TodoListWebApp
         protected void Page_Load(object sender, EventArgs e)
         {
         }
+
         protected void LogOut_Click(object sender, LoginCancelEventArgs e)
         {
-             //Common.RemoveAccount();
+            //Common.RemoveAccount();
             // Redirect to ~/Account/SignOut after signing out.
             string callbackUrl = Request.Url.GetLeftPart(UriPartial.Authority) + Response.ApplyAppPathModifier("~/Account/SignOut");
 
@@ -34,7 +35,5 @@ namespace TodoListWebApp
                     OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
         }
-
-
     }
 }
