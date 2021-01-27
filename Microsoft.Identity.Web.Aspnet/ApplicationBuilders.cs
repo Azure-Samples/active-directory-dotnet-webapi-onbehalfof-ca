@@ -14,7 +14,7 @@ namespace Microsoft.Identity.Web.Aspnet
 
         public ApplicationBuilders(CacheType cacheType)
         {
-            this.CacheType = CacheType;
+            this.CacheType = cacheType;
         }
 
         private void InitializeUserTokenCache(ITokenCache cache)

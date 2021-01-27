@@ -16,7 +16,7 @@ namespace TodoListWebApp
             app.UseCookieAuthentication(new CookieAuthenticationOptions());
 
             string[] scopes = new[] { ConfigurationManager.AppSettings["ida:TodoListServiceScope"] };
-            app.AddMicrosoftIdentityWebAppAuthentication(new AuthenticationConfig());
+            //app.AddMicrosoftIdentityWebAppAuthentication(new AuthenticationConfig());
             app.EnableTokenAcquisitionToCallDownstreamApi(new AuthenticationConfig(), scopes);
 
             // This makes any middleware defined above this line run before the Authorization rule is applied in web.config
