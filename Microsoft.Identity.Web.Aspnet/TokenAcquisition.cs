@@ -1,8 +1,13 @@
-﻿using Microsoft.Identity.Client;
+﻿using Microsoft.Extensions.Primitives;
+using Microsoft.Identity.Client;
+using Microsoft.Net.Http.Headers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -89,6 +94,43 @@ namespace Microsoft.Identity.Web.Aspnet
                         .WithAuthority(authority)
                         .ExecuteAsync();
             return result;
+        }
+
+        /// <summary>
+        /// Used in web APIs (no user interaction).
+        /// Replies to the client through the HTTP response by sending a 403 (forbidden) and populating the 'WWW-Authenticate' header so that
+        /// the client, in turn, can trigger a user interaction so that the user consents to more scopes.
+        /// </summary>
+        /// <param name="scopes">Scopes to consent to.</param>
+        /// <param name="msalServiceException">The <see cref="MsalUiRequiredException"/> that triggered the challenge.</param>
+        /// <param name="httpResponse">The <see cref="HttpResponse"/> to update.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task ReplyForbiddenWithWwwAuthenticateHeaderAsync(IEnumerable<string> scopes, MsalUiRequiredException msalServiceException, HttpResponse httpResponse = null)
+        {
+            // A user interaction is required, but we are in a web API, and therefore, we need to report back to the client through a 'WWW-Authenticate' header https://tools.ietf.org/html/rfc6750#section-3.1
+
+            try
+            {
+                IDictionary<string, string> parameters = new Dictionary<string, string>()
+                {
+                    { Constants.Claims, msalServiceException.Claims },
+                    { Constants.Scopes, string.Join(",", scopes) },
+                    { Constants.ProposedAction, "" },
+                };
+
+                string parameterString = string.Join("; ", parameters.Select(p => $"{p.Key}=\"{p.Value}\""));
+
+                var headers = httpResponse.Headers;
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+
+                headers[HeaderNames.WWWAuthenticate] = new StringValues($"Bearer {parameterString}");
+
+                httpResponse.Write("insufficient_claims");
+            }
+            catch (Exception ex)
+            {
+                var a = ex.Message;
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Owin.Security.Notifications;
 using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
 using System.Collections.Generic;
@@ -63,9 +65,29 @@ namespace Microsoft.Identity.Web.Aspnet
                             arg.Response.Redirect("/?errormessage=" + arg.Exception.Message);
 
                             return Task.FromResult(0);
-                        }
+                        },
+                        RedirectToIdentityProvider = OnRedirectToIdentityProvider
+
                     }
                 });
+        }
+        private static Task OnRedirectToIdentityProvider(RedirectToIdentityProviderNotification<OpenIdConnectMessage, OpenIdConnectAuthenticationOptions> notification)
+        {
+            var state = notification.ProtocolMessage.State;
+            if (state != null && state.Contains("="))
+            {
+                var stateAuthProperties = notification.ProtocolMessage.State.Split('=');
+                var protectedState = stateAuthProperties[1];
+                var authProperties = notification.Options.StateDataFormat.Unprotect(protectedState);
+                if (authProperties != null)
+                {
+                    if (authProperties.Dictionary.ContainsKey(OidcConstants.AdditionalClaims))
+                    {
+                        notification.ProtocolMessage.SetParameter(OidcConstants.AdditionalClaims, authProperties.Dictionary[OidcConstants.AdditionalClaims]);
+                    }
+                }
+            }
+            return Task.FromResult(0);
         }
     }
 }

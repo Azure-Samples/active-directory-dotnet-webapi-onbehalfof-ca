@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Web.Aspnet;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -11,8 +12,6 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
-using TodoList.Shared;
-using TodoListService.Utils;
 
 namespace TodoListService.Controllers
 {
@@ -44,7 +43,7 @@ namespace TodoListService.Controllers
 
             AuthenticationResult result = null;
 
-            _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions());
+            _tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
 
             // In the case of a transient error, retry once after 1 second, then abandon.
             // Retrying is optional.  It may be better, for your application, to return an error immediately to the user and have the user initiate the retry.
@@ -64,8 +63,7 @@ namespace TodoListService.Controllers
                 {
                     await _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeaderAsync((caResourceIdScope),
                         ex, HttpContext.Current.Response);
-                    //HttpContext.Current.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Claims) });
+                    throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden});
                 }
             } while ((retry == true) && (retryCount < 1));
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Identity.Web.Aspnet;
+using System;
 using System.Collections.Generic;
 using System.Web.UI.WebControls;
 
@@ -55,8 +56,16 @@ namespace TodoListWebApp.TodoList
             GridViewRow row = (GridViewRow)grdTodoList.Rows[e.RowIndex];
 
             var id = Convert.ToInt32(row.Cells[0].Text);
-            ToDoListService.Delete(id);
-            GridViewBind();
+            try
+            {
+
+                ToDoListService.Delete(id);
+                GridViewBind();
+            }
+            catch (WebApiMsalUiRequiredException msalException)
+            {
+                MicrosoftIdentityExceptionHandler.HandleExceptionFromWebAPI(msalException);
+            }
         }
     }
 }

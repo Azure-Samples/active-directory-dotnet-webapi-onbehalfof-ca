@@ -62,6 +62,7 @@ namespace TodoListService.Controllers
 
         private static IEnumerable<string> requestedScopes = new List<string> { ConfigurationManager.AppSettings["ida:GraphScope"] };
 
+        private static string acrsValue= ConfigurationManager.AppSettings["ida:AcrsValue"];
         //
         // To Do items list for all users.  Since the list is stored in memory, it will go away if the service is cycled.
         //
@@ -180,6 +181,10 @@ namespace TodoListService.Controllers
         // Delete api/todolist
         public void Delete(int id)
         {
+            // Checks if the access token has acrs claim with acrsValue.
+            // If does not exists then throws exception.
+            AuthorizeForAuthenticationContextClassReference.EnsureUserHasAuthenticationContextClassReference(acrsValue);
+            
             TodoItem todo = db.TodoItems.Find(id);
             db.TodoItems.Remove(todo);
             db.SaveChanges();

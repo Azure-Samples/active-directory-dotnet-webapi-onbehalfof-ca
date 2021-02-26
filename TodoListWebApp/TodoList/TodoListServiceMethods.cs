@@ -62,14 +62,43 @@ namespace TodoListWebApp.TodoList
             PrepareAuthenticatedClientAsync().ConfigureAwait(false);
             var response = _httpClient.DeleteAsync($"{ _TodoListBaseAddress}/api/todolist/{id}").Result;
 
+            var responseContent = response.Content.ReadAsStringAsync().Result;
+
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return;
             }
-
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && responseContent == Constants.InsufficientClaims)
+            {
+                 throw new WebApiMsalUiRequiredException(responseContent, response);
+            }
+            else
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
+        public async Task<List<string>> GetAllUsersAsync()
+        {
+            List<string> users = new List<string>();
+            await PrepareAuthenticatedClientAsync();
+            var response = _httpClient.GetAsync(_TodoListBaseAddress + "/api/AccessCaApi/Get").Result;
+            List<string> lstUsers = new List<string>();
 
+            var responseContent = response.Content.ReadAsStringAsync().Result;
+
+            if (response != null && response.StatusCode == HttpStatusCode.OK)
+            {
+                string content = response.Content.ReadAsStringAsync().Result;
+                lstUsers = JsonConvert.DeserializeObject<List<string>>(content);
+                return lstUsers;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && responseContent == Constants.InsufficientClaims)
+            {
+               
+                throw new WebApiMsalUiRequiredException(responseContent, response);
+            }
+            else
+                throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
+
+        }
         /// <summary>
         /// Retrieves the Access Token for the Web API.
         /// Sets Authorization and Accept headers for the request.

@@ -290,6 +290,7 @@
     <Content Include="Site.Master" />
     <Content Include="TodoList\Create.aspx" />
     <Content Include="TodoList\Index.aspx" />
+    <Content Include="Users\DownstreamUsers.aspx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -317,7 +318,6 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\StartupAuth.cs" />
     <Compile Include="Common\Common.cs" />
-    <Compile Include="Common\Constants.cs" />
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -360,6 +360,13 @@
       <DependentUpon>Index.aspx</DependentUpon>
     </Compile>
     <Compile Include="TodoList\TodoListServiceMethods.cs" />
+    <Compile Include="Users\DownstreamUsers.aspx.cs">
+      <DependentUpon>DownstreamUsers.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Users\DownstreamUsers.aspx.designer.cs">
+      <DependentUpon>DownstreamUsers.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>

@@ -51,6 +51,7 @@
                     <ul class="nav navbar-nav">
                         <li><a id="A2" class="nav-link" runat="server" href="~/">Home</a></li>
                         <li><a id="A4" class="nav-link" runat="server" href="~/TodoList/Index">TodoList</a></li>
+                        <li><a id="A3" class="nav-link" runat="server" href="~/Users/DownstreamUsers">Users</a></li>      
                     </ul>
                     </div>
                     <div class="justify-content-end">
