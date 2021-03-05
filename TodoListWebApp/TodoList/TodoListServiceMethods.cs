@@ -79,7 +79,7 @@ namespace TodoListWebApp.TodoList
         {
             List<string> users = new List<string>();
             await PrepareAuthenticatedClientAsync();
-            var response = _httpClient.GetAsync(_TodoListBaseAddress + "/api/AccessCaApi/Get").Result;
+            var response = _httpClient.GetAsync(_TodoListBaseAddress + "/api/AccessCaApi/GetAll").Result;
             List<string> lstUsers = new List<string>();
 
             var responseContent = response.Content.ReadAsStringAsync().Result;

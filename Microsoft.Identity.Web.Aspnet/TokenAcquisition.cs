@@ -71,7 +71,6 @@ namespace Microsoft.Identity.Web.Aspnet
                 throw ex;
             }
 
-            return null;
         }
 
         /// <summary>

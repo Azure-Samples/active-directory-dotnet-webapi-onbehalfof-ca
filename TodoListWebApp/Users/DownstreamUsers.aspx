@@ -3,7 +3,7 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
         <% if (Context.User.Identity.IsAuthenticated)
         {  %>
-        List of Users
+        <h4>List of Users</h4>
         <table class="tableClass">
         <thead>
             <tr>

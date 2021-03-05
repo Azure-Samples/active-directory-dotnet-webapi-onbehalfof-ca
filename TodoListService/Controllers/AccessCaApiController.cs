@@ -1,5 +1,6 @@
 ﻿using Microsoft.Identity.Client;
 using Microsoft.Identity.Web.Aspnet;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -7,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
@@ -25,6 +27,9 @@ namespace TodoListService.Controllers
         //
         private IEnumerable<string> caResourceIdScope = new List<string> { ConfigurationManager.AppSettings["ida:CAProtectedResourceScope"] };
 
+        HttpClient _httpClient = new HttpClient();
+
+        private string _TodoListDownstreamBaseAddress = "https://localhost:44392/";
         // Error Constants
         const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
         const String INTERACTION_REQUIRED = "interaction_required";
@@ -76,7 +81,61 @@ namespace TodoListService.Controllers
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
             */
+        }
+        [HttpGet]
+        [Route("api/AccessCaApi/GetAll")]
+        // GET: api/AccessCaApi/GetAll
+        public async Task<List<string>> GetAll()
+        {
+            var scopeClaim = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope");
+            if (scopeClaim == null || (!scopeClaim.Value.ContainsAny("access_as_user")))
+            {
+                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'access_as_user' or scope claim not found" });
+            }
 
+            AuthenticationResult result = null;
+
+            _tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
+
+            // In the case of a transient error, retry once after 1 second, then abandon.
+            // Retrying is optional.  It may be better, for your application, to return an error immediately to the user and have the user initiate the retry.
+            bool retry = false;
+            int retryCount = 0;
+
+            do
+            {
+                retry = false;
+                try
+                {
+                    result = await _tokenAcquisition.GetUserTokenOnBehalfOfAsync(caResourceIdScope);
+
+            }
+                catch (MsalUiRequiredException ex)
+            {
+                await _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeaderAsync((caResourceIdScope),
+                    ex, HttpContext.Current.Response);
+                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden});
+            }
+        } while ((retry == true) && (retryCount < 1));
+
+            /*
+             You can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+             Use this code below to call the downstream Web API OBO
+                */
+            string oboAccessToken = result.AccessToken;
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oboAccessToken);
+            List<string> lstUsers = new List<string>();
+            HttpResponseMessage response = await _httpClient.GetAsync(_TodoListDownstreamBaseAddress + "/api/CallGraph");
+            if (response != null && response.StatusCode == HttpStatusCode.OK)
+            {
+                string content = response.Content.ReadAsStringAsync().Result;
+                lstUsers = JsonConvert.DeserializeObject<List<string>>(content);
+
+                return lstUsers;
+            }
+
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
     }
 }
