@@ -20,46 +20,53 @@ namespace Microsoft.Identity.Web.Aspnet
         {
             WebApiMsalUiRequiredException webApiMsalUiRequiredException =
                    ex as WebApiMsalUiRequiredException;
-            if (webApiMsalUiRequiredException != null && webApiMsalUiRequiredException.Message == Constants.InsufficientClaims)
+            if (webApiMsalUiRequiredException != null)
             {
                 Dictionary<string, string> keyValues = ExtractAuthenticationHeader.ExtractHeaderValues(webApiMsalUiRequiredException.HttpResponseMessage);
 
-                try
+                // read the header and checks if it conatins error with insufficient_claims value.
+                if (keyValues.ContainsKey(Constants.Error) && keyValues[Constants.Error] == Constants.InsufficientClaims)
                 {
+
+                    try
                     {
-                        string redirectUri = HttpContext.Current.Request.Url.ToString();
-                        AuthenticationProperties authenticationProperties = new AuthenticationProperties();
-                        authenticationProperties.RedirectUri = redirectUri;
-                        if (keyValues.ContainsKey(Constants.Claims))
                         {
-                            string claims = keyValues[Constants.Claims];
-                            authenticationProperties.Dictionary.Add("claims", claims);
+                            string redirectUri = HttpContext.Current.Request.Url.ToString();
+                            AuthenticationProperties authenticationProperties = new AuthenticationProperties();
+                            authenticationProperties.RedirectUri = redirectUri;
+                            if (keyValues.ContainsKey(Constants.Claims))
+                            {
+                                string claims = keyValues[Constants.Claims];
+                                authenticationProperties.Dictionary.Add(Constants.Claims, claims);
 
+                            }
+                            if (keyValues.ContainsKey(Constants.Scopes))
+                            {
+                                string scopes = keyValues[Constants.Scopes];
+                                authenticationProperties.Dictionary.Add(
+                                    Constants.Scope,
+                                    scopes);
+                            }
+
+                            HttpContext.Current.GetOwinContext().Authentication.Challenge(
+                              authenticationProperties,
+                              OpenIdConnectAuthenticationDefaults.AuthenticationType);
                         }
-                        if (keyValues.ContainsKey(Constants.Scopes))
-                        {
-                            string scopes = keyValues[Constants.Scopes];
-                            authenticationProperties.Dictionary.Add(
-                                Constants.Scope,
-                                scopes);
-                        }
-                    
-                        HttpContext.Current.GetOwinContext().Authentication.Challenge(
-                          authenticationProperties,
-                          OpenIdConnectAuthenticationDefaults.AuthenticationType);
                     }
+                    catch (Exception exception)
+                    {
+                        throw exception;
+                    }
+
                 }
-                catch (Exception exception)
+                else
                 {
-                    throw exception;
+                    throw ex;
                 }
-
             }
-
             else
             {
                 throw ex;
-
             }
         }
     }

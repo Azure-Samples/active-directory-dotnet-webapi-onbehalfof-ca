@@ -98,7 +98,10 @@ namespace Microsoft.Identity.Web.Aspnet
         internal const string NameClaim = "name";
         internal const string Consent = "consent";
         internal const string ConsentUrl = "consentUri";
+        internal const string AuthorizationUri = "authorization_uri";
         internal const string Scopes = "scopes";
+        internal const string Realm = "realm";
+        internal const string Error = "error";
         internal const string ProposedAction = "proposedAction";
         internal const string Authorization = "Authorization";
         internal const string ApplicationJson = "application/json";

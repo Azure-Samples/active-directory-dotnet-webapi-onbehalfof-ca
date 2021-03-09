@@ -55,20 +55,21 @@
     <Compile Include="AuthenticationConfig.cs" />
     <Compile Include="AuthorizeForAuthenticationContextClassReference.cs" />
     <Compile Include="CacheType.cs" />
-    <Compile Include="ClaimConstants.cs" />
+    <Compile Include="Constants\ClaimConstants.cs" />
     <Compile Include="ClaimsPrincipalExtension.cs" />
     <Compile Include="CommonUtil.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Constants\Constants.cs" />
     <Compile Include="ExtractAuthenticationHeader.cs" />
-    <Compile Include="IdentityConstants.cs" />
+    <Compile Include="Constants\IdentityConstants.cs" />
     <Compile Include="JwtBearerOptions.cs" />
     <Compile Include="MicrosoftIdentityExceptionHandler.cs" />
     <Compile Include="MicrosoftIdentityWebApiAuthorizationBuilder.cs" />
     <Compile Include="MicrosoftIdentityWebAppAuthenticationBuilderExtensions.cs" />
     <Compile Include="MSALUserTokenMemoryCache.cs" />
-    <Compile Include="OidcConstants.cs" />
+    <Compile Include="Constants\OidcConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IMsalTokenCacheProvider.cs" />
+    <Compile Include="InsufficientClaimsResponse.cs" />
     <Compile Include="TokenAcquisition.cs" />
     <Compile Include="WebApiMsalUiRequiredException.cs" />
   </ItemGroup>

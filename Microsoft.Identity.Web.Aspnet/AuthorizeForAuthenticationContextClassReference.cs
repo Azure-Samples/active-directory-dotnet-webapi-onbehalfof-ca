@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace Microsoft.Identity.Web.Aspnet
@@ -18,12 +15,14 @@ namespace Microsoft.Identity.Web.Aspnet
         /// </summary>
         /// <param name="acrsValue"></param>
         /// <param name="httpResponse"></param>
-        public static void EnsureUserHasAuthenticationContextClassReference(string acrsValue)
+        public static void EnsureUserHasAuthenticationContextClassReference(string acrsValue, string additionalInfo = null)
         {
-            AuthenticationConfig authenticationConfig= new AuthenticationConfig();
+            AuthenticationConfig authenticationConfig = new AuthenticationConfig();
+           
             HttpContext context = HttpContext.Current;
+           
             ClaimsPrincipal claimsPrincipal = ClaimsPrincipal.Current;
-            
+
             string authenticationContextClassReferencesClaim = "acrs";
 
             if (context == null || context.User == null || claimsPrincipal.Claims == null || !claimsPrincipal.Claims.Any())
@@ -35,14 +34,25 @@ namespace Microsoft.Identity.Web.Aspnet
 
             if (acrsClaim == null || acrsClaim.Value != acrsValue)
             {
-                var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\""+ acrsValue + "\"}}}"));
-
-                context.Response.Headers.Add("WWW-Authenticate", $"Bearer realm=\"\"; authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\"; client_id=\"" + authenticationConfig.ClientId + "\"; error=\"insufficient_claims\"; claims=\"" + base64str + "\"; cc_type=\"authcontext\"");
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
-                string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
+                //string message = string.Format(CultureInfo.InvariantCulture, "The presented access tokens had insufficient claims. Please request for claims requested in the WWW-Authentication header and try again.");
+                var base64str = Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"access_token\":{\"acrs\":{\"essential\":true,\"value\":\"" + acrsValue + "\"}}}"));
+
+                // Create response header as per https://tools.ietf.org/html/rfc6750#section-3.1
+                var authenticateHeader = CommonUtil.CreateResponseHeader(authenticationConfig, base64str);
+
+                context.Response.Headers.Add("WWW-Authenticate", authenticateHeader);
+
+               
+                string message = $"The claim 'acrs' is either missing or does not have the value(s) '{acrsValue}'.Please redirect the user to the authorization server for additional processing.";
                 
-                context.Response.Write("insufficient_claims");
+                // Create response content with error details.
+                InsufficientClaimsResponse insufficientClaimsResponse = CommonUtil.CreateErrorResponseMessage(message, additionalInfo);
+                if (insufficientClaimsResponse != null)
+                {
+                    context.Response.Write(Newtonsoft.Json.JsonConvert.SerializeObject(insufficientClaimsResponse));
+                }
 
                 context.Response.End();
 

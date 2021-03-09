@@ -14,7 +14,7 @@ namespace Microsoft.Identity.Web.Aspnet
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        internal static Dictionary<string,string> ExtractHeaderValues(HttpResponseMessage response)
+        internal static Dictionary<string, string> ExtractHeaderValues(HttpResponseMessage response)
         {
             Dictionary<string, string> keyValues = new Dictionary<string, string>();
             var header = response.Headers.WwwAuthenticate.ToString();
@@ -26,10 +26,12 @@ namespace Microsoft.Identity.Web.Aspnet
                 }
 
                 IEnumerable<string> parameters = header.Split(';').Select(v => v.Trim()).ToList();
-                
+
                 string claims = GetParameter(parameters, Constants.Claims);
-                
+
                 string scopes = GetParameter(parameters, Constants.Scopes);
+
+                string error = GetParameter(parameters, Constants.Error);
 
                 if (!string.IsNullOrEmpty(claims))
                 {
@@ -38,6 +40,11 @@ namespace Microsoft.Identity.Web.Aspnet
                 if (!string.IsNullOrEmpty(scopes))
                 {
                     keyValues.Add(Constants.Scopes, scopes);
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    keyValues.Add(Constants.Error, error);
                 }
             }
             return keyValues;

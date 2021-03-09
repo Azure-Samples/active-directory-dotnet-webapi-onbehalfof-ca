@@ -63,14 +63,16 @@ namespace TodoListWebApp.TodoList
             var response = _httpClient.DeleteAsync($"{ _TodoListBaseAddress}/api/todolist/{id}").Result;
 
             var responseContent = response.Content.ReadAsStringAsync().Result;
-
+            
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return;
             }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && responseContent == Constants.InsufficientClaims)
+            else if (response.StatusCode == HttpStatusCode.Forbidden)
             {
-                 throw new WebApiMsalUiRequiredException(responseContent, response);
+                var responsInfo = JsonConvert.DeserializeObject<InsufficientClaimsResponse>(responseContent);
+
+                throw new WebApiMsalUiRequiredException(responsInfo.Message, response);
             }
             else
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
@@ -90,10 +92,11 @@ namespace TodoListWebApp.TodoList
                 lstUsers = JsonConvert.DeserializeObject<List<string>>(content);
                 return lstUsers;
             }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && responseContent == Constants.InsufficientClaims)
+            else if (response.StatusCode == HttpStatusCode.Forbidden)
             {
-               
-                throw new WebApiMsalUiRequiredException(responseContent, response);
+                var responsInfo = JsonConvert.DeserializeObject<InsufficientClaimsResponse>(responseContent);
+
+                throw new WebApiMsalUiRequiredException(responsInfo.Message, response);
             }
             else
                 throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");

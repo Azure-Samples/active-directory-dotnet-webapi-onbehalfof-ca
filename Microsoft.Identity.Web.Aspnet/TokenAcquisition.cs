@@ -104,27 +104,28 @@ namespace Microsoft.Identity.Web.Aspnet
         /// <param name="msalServiceException">The <see cref="MsalUiRequiredException"/> that triggered the challenge.</param>
         /// <param name="httpResponse">The <see cref="HttpResponse"/> to update.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task ReplyForbiddenWithWwwAuthenticateHeaderAsync(IEnumerable<string> scopes, MsalUiRequiredException msalServiceException, HttpResponse httpResponse = null)
+        public async Task ReplyForbiddenWithWwwAuthenticateHeaderAsync(IEnumerable<string> scopes, MsalUiRequiredException msalServiceException, HttpResponse httpResponse, string additional_info = null)
         {
             // A user interaction is required, but we are in a web API, and therefore, we need to report back to the client through a 'WWW-Authenticate' header https://tools.ietf.org/html/rfc6750#section-3.1
 
             try
             {
-                IDictionary<string, string> parameters = new Dictionary<string, string>()
-                {
-                    { Constants.Claims, msalServiceException.Claims },
-                    { Constants.Scopes, string.Join(",", scopes) },
-                    { Constants.ProposedAction, "" },
-                };
-
-                string parameterString = string.Join("; ", parameters.Select(p => $"{p.Key}=\"{p.Value}\""));
+                // Create response header as per https://tools.ietf.org/html/rfc6750#section-3.1
+                string parameterString = CommonUtil.CreateResponseHeader(AuthenticationConfig, msalServiceException.Claims, scopes);
 
                 var headers = httpResponse.Headers;
+
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
 
                 headers[HeaderNames.WWWAuthenticate] = new StringValues($"Bearer {parameterString}");
 
-                httpResponse.Write("insufficient_claims");
+                string message = msalServiceException.Message;
+
+                // Create response content with error details.
+
+                InsufficientClaimsResponse insufficientClaimsResponse = CommonUtil.CreateErrorResponseMessage(message, additional_info);
+                httpResponse.Write(Newtonsoft.Json.JsonConvert.SerializeObject(insufficientClaimsResponse));
+
             }
             catch (Exception ex)
             {
