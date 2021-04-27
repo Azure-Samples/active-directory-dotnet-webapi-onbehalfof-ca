@@ -1,331 +1,394 @@
 ---
-services: active-directory
-platforms: dotnet
-author: jmprieur
-level: 400
-client: .NET Framework 4.5 Console, JavaScript SPA
-service: ASP.NET Web API
-endpoint: AAD V1
+page_type: sample
+languages:
+  - csharp
+products:
+  - dotnet
+  - aspnet
+  - ms-graph
+  - azure-active-directory  
+name: Sign-in a user with the Microsoft Identity Platform and call an ASP.NET web API that calls a downstream Web API with Conditional Access
+urlFragment: active-directory-dotnet-webapi-onbehalfof-ca
+description: "This sample demonstrates a .NET web App calling a .NET web API that is secured using Azure AD"
 ---
-# .NET Native App accessing Web Service that calls a downstream Web API with Conditional Access
+# Sign-in a user with the Microsoft Identity Platform and call an ASP.NET web API that calls a downstream Web API with Conditional Access
+
+ 1. [Overview](#overview)
+ 1. [Scenario](#scenario)
+ 1. [Contents](#contents)
+ 1. [Prerequisites](#prerequisites)
+ 1. [Setup](#setup)
+ 1. [Registration](#registration)
+ 1. [Running the sample](#running-the-sample)
+ 1. [Explore the sample](#explore-the-sample)
+ 1. [About the code](#about-the-code)
+ 1. [Deployment](#deployment)
+ 1. [More information](#more-information)
+ 1. [Community Help and Support](#community-help-and-support)
+ 1. [Contributing](#contributing)
 
 ![Build badge](https://identitydivision.visualstudio.com/_apis/public/build/definitions/a7934fdd-dcde-4492-a406-7fad6ac00e17/496/badge)
 
-> There's a newer version of this sample! Check it out: https://github.com/azure-samples/ms-identity-dotnet-desktop-aspnetcore-webapi
->
-> This newer sample takes advantage of the Microsoft identity platform (formerly Azure AD v2.0).
->
-> While still in public preview, every component is supported in production environments.
+## Overview
 
-## About this Sample
+This sample demonstrates a .NET web App and native client calling a .NET web API that is secured using Azure AD. Further on the API will also call a downstream API on-behalf of the signed-in user. The downstream web API will have a Conditional Access policy applied that requires Multiple Factors Authentication (MFA).
 
-The sample uses the Active Directory Authentication Library (ADAL) in a native client to obtain a token for the user to call the first web service, and also in the first web service to get a token to act on behalf of the user to call the second downstream web API.  The downstream web API will have a Conditional Access policy applied that requires Multiple Factors Authentication (MFA).
+This sample is built on the core [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof) but adds support for conditional access.
 
-### Overview
+## Scenario
 
- This sample is built on the core [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof) but adds support for conditional access.
+As in that sample, the native client and a .NET web application:
 
-As in that sample, the native client and a simple JavaScript single page application:
+1. Uses the Microsoft Authentication Library (MSAL) to sign-in and obtain a JWT access token from **Azure AD**.
+1. The access token is used as a bearer token to authorize the user to call the .NET web API protected **Azure AD**.
+1. Calls the ASP.NET Web API(`TodoListService`) by using the access token as a bearer token in the authentication header of the Http request.
 
-1. Acquire a token to act On Behalf Of the user.
-2. Call a web API (`TodoListService`)
-3. Which itself calls another downstream Web API ([The Microsoft Graph](https://graph.microsoft.com))
-4. This sample then extends the features of the [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof) sample where the `TodoListService` Web API calls a downstream service, which requires conditional access. Therefore the intermediate service (`TodoListService`) needs to propagate to its clients the need to process additional claims (for instance to carry out  two factor authentication).
+The web API:
 
-Finally, as in the previous sample, the TodoListService uses a database to:
+1. Calls another downstream Web API ([The Microsoft Graph](https://graph.microsoft.com))
+1. This sample then extends the features of the [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof) sample where the `TodoListService` Web API calls a downstream service, which requires conditional access. Therefore the intermediate service (`TodoListService`) needs to propagate to its clients the need to process additional claims (for instance to carry out  two factor authentication).
 
-- Store the todo list
-- Illustrate [token cache serialization](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/wiki/Token-cache-serialization) in a service
+![Overview](./ReadmeFiles/topology.png)
 
-This sample is intended to explore the implications of using the [On-Behalf-Of flow](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-on-behalf-of) with Conditional Access. We'll walk through code changes necessary to build an app that supports Conditional Access. Simply, Azure AD will return state to the web service that needs to hand this back to the client. The client can then use this state to prompt the end user to satisfy the downstream Conditional Access policy.
+## Prerequisites
 
-> Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
+- [Visual Studio](https://visualstudio.microsoft.com/downloads/)
+- An **Azure AD** tenant. For more information see: [How to get an Azure AD tenant](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant)
+- A user account in your **Azure AD** tenant. This sample will not work with a **personal Microsoft account**. Therefore, if you signed in to the [Azure portal](https://portal.azure.com) with a personal account and have never created a user account in your directory before, you need to do that now.
 
-## Topology
+## Setup
 
-![Overview](./ReadmeFiles/Topology.png)
-
-This sample has three components:
-
-\[Native App\] - - - \[Web Service\] - - - OnBehalfOf - - - \[Downstream Web API & MS Graph\]
-
-**Native App**: Simple Windows Desktop ToDo List app that allows a user to sign in, satisfy a Conditional Access policy, and add a new task.  Once a user is signed in, the app exposes two options.  When you hit **Satisfy CA**, the client app calls Web Service to do an On-Behalf-Of flow to a CA-Protected downstream Web API #2.  The service returns an error that has to be passed back to the client and handled properly. When you select **add ToDo item**, the Web Service will make an On-Behalf-Of call to the Microsoft Graph rather than calling the CA-protected api.
-
-**Web Service**: Service that Native app sends requests to and requires authorization via OWIN framework.  It will then will perform an OBO call to Web API 2 if **Satisfy CA** option was used or an OBO call to the Microsoft Graph if **add ToDo item** option was used.
-
-**Web API 2**: No code for this piece.  We register the app, but never call it. It exists to demonstrate token acquisition when Conditional Access is in place.
-
-### Scenario
-
-As in the previous sample, you sign in, and add items. You can also click on the **Satisfy CA** button, which will call an action of the `TodoListService` Web API that itself acquires a token in order to call the downstream service. As this downstream service requires MFA, the `TodoListService` will get a 401 error with an additional claim that it will then propagate back to the client through the Web API response. When the `TodoListClient` desktop application receives this error, it extracts the additional claims from response, and requests another token from Azure AD, with these additional claims. It can then use this token to call the `TodoListService`, and this time, this call will succeed.
-
-![UI](./ReadmeFiles/TodoListClient.png)
-
-## How to Run this Sample
-
-To run this sample, you'll need:
-
-- [Visual Studio 2017](https://aka.ms/vsdownload)
-- An Internet connection
-- An Azure Active Directory (Azure AD) tenant. For more information on how to get an Azure AD tenant, see [How to get an Azure AD tenant](https://azure.microsoft.com/en-us/documentation/articles/active-directory-howto-tenant/)
-- A user account in your Azure AD tenant. This sample will not work with a Microsoft account (formerly Windows Live account). Therefore, if you signed in to the [Azure portal](https://portal.azure.com) with a Microsoft account and have never created a user account in your directory before, you need to do that now.
-
-### Step 1:  Clone or download this repository
+### Step 1: Clone or download this repository
 
 From your shell or command line:
 
-```Shell
-git clone https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca.git
+```console
+    git clone https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof-ca.git
 ```
 
-> Given that the name of the sample is pretty long, and so are the name of the referenced NuGet pacakges, you might want to clone it in a folder close to the root of your hard drive, to avoid file size limitations on Windows.
+or download and extract the repository .zip file.
 
-### Step 2:  Register the sample with your Azure Active Directory tenant
+> :warning: To avoid path length limitations on Windows, we recommend cloning into a directory near the root of your drive.
 
-There are three projects and four applications in this sample. Each needs to be separately registered in your Azure AD tenant. To register these projects, you can:
+### Register the sample application(s) with your Azure Active Directory tenant
 
-- either follow the steps in the paragraphs below ([Step 2](#step-2--register-the-sample-with-your-azure-active-directory-tenant) and [Step 3](#step-3--configure-the-sample-to-use-your-azure-ad-tenant))
+There are four projects in this sample. Each needs to be separately registered in your Azure AD tenant. To register these projects, you can:
+
+- follow the steps below for manually register your apps
 - or use PowerShell scripts that:
-  - **automatically** create for you the Azure AD applications and related objects (passwords, permissions, dependencies)
-  - modify the Visual Studio projects' configuration files.
+  - **automatically** creates the Azure AD applications and related objects (passwords, permissions, dependencies) for you.
+  - modify the projects' configuration files.
 
-If you want to use this automation, read the instructions in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md). After successfully executing the script, we advice you go through the various settings listed in  [Step 3](#step-3--configure-the-sample-to-use-your-azure-ad-tenant)). Carefully note the changes made to the configuration files of the various projects in the solution. This will help you understand better as how and where these come together to make this sample work.   
+<details>
+  <summary>Expand this section if you want to use this automation:</summary>
 
-#### First step: choose the Azure AD tenant where you want to create your applications
+> :warning: If you have never used **Azure AD Powershell** before, we recommend you go through the [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md) once to ensure that your environment is prepared correctly for this step.
+
+1. On Windows, run PowerShell as **Administrator** and navigate to the root of the cloned directory
+1. If you have never used Azure AD Powershell before, we recommend you go through the [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md) once to ensure that your environment is prepared correctly for this step.
+1. In PowerShell run:
+
+   ```PowerShell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+   ```
+
+1. Run the script to create your Azure AD application and configure the code of the sample application accordingly.
+1. In PowerShell run:
+
+   ```PowerShell
+   cd .\AppCreationScripts\
+   .\Configure.ps1
+   ```
+
+   > Other ways of running the scripts are described in [App Creation Scripts](./AppCreationScripts/AppCreationScripts.md)
+   > The scripts also provide a guide to automated application registration, configuration and removal which can help in your CI/CD scenarios.
+
+</details>
+
+### Choose the Azure AD tenant where you want to create your applications
 
 As a first step you'll need to:
 
 1. Sign in to the [Azure portal](https://portal.azure.com).
-1. On the top bar, click on your account, and then on **Switch Directory**. 
-1. Once the *Directory + subscription* pane opens, choose the Active Directory tenant where you wish to register your application, from the *Favorites* or *All Directories* list.
-1. Click on **All services** in the left-hand nav, and choose **Azure Active Directory**.
+1. If your account is present in more than one Azure AD tenant, select your profile at the top right corner in the menu on top of the page, and then **switch directory** to change your portal session to the desired Azure AD tenant.
 
-> In the next steps, you might need the tenant name (or directory name) or the tenant ID (or directory ID). These are presented in the **Properties**
-of the Azure Active Directory window respectively as *Name* and *Directory ID*
+### Register the service app (ToDoListService-OBO-CA-ASP.NET)
 
-#### Register the downstream service app (DownstreamService-OBO-CA)
+1. Navigate to the [Azure portal](https://portal.azure.com) and select the **Azure AD** service.
+1. Select the **App Registrations** blade on the left, then select **New registration**.
+1. In the **Register an application page** that appears, enter your application's registration information:
+   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example `ToDoListService-OBO-CA-ASP.NET`.
+   - Under **Supported account types**, select **Accounts in this organizational directory only**.
+1. Select **Register** to create the application.
+1. In the app's registration screen, find and note the **Application (client) ID**. You use this value in your app's configuration file(s) later in your code.
+1. Select **Save** to save your changes.
+1. In the app's registration screen, select the **Expose an API** blade to the left to open the page where you can declare the parameters to expose this app as an API for which client applications can obtain [access tokens](https://docs.microsoft.com/azure/active-directory/develop/access-tokens) for.
+The first thing that we need to do is to declare the unique [resource](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow) URI that the clients will be using to obtain access tokens for this Api. To declare an resource URI, follow the following steps:
+   - Select `Set` next to the **Application ID URI** to generate a URI that is unique for this app.
+   - For this sample, accept the proposed Application ID URI (`api://{clientId}`) by selecting **Save**.
+1. All APIs have to publish a minimum of one [scope](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow#request-an-authorization-code) for the client's to obtain an access token successfully. To publish a scope, follow the following steps:
+   - Select **Add a scope** button open the **Add a scope** screen and Enter the values as indicated below:
+        - For **Scope name**, use `access_as_user`.
+        - Select **Admins and users** options for **Who can consent?**.
+        - For **Admin consent display name** type `Access ToDoListService-OBO-CA-ASP.NET`.
+        - For **Admin consent description** type `Allows the app to access ToDoListService-OBO-CA-ASP.NET as the signed-in user.`
+        - For **User consent display name** type `Access ToDoListService-OBO-CA-ASP.NET`.
+        - For **User consent description** type `Allow the application to access ToDoListService-OBO-CA-ASP.NET on your behalf.`
+        - Keep **State** as **Enabled**.
+        - Select the **Add scope** button on the bottom to save this scope.
 
-1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
-1. Enter a friendly name for the application, for example 'DownstreamService-OBO-CA' and select 'Web app / API' as the *Application Type*.
-1. For the *sign-on URL*, enter the base URL for the sample, which is by default `https://localhost:44302/`.
-1. Click on **Create** to create the application.
-1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
-1. Then click on **Settings**, and choose **Properties**.
-1. For the App ID URI, replace the guid in the generated URI 'https://\<your_tenant_name\>/\<guid\>', with the name of your service, for example, 'https://\<your_tenant_name\>/DownstreamService-OBO-CA' (replacing `<your_tenant_name>` with the name of your Azure AD tenant)
+#### Configure the service app (ToDoListService-OBO-CA-ASP.NET) to use your app registration
 
-#### Register the service app (TodoListService-OBO-CA)
+Open the project in your IDE (like Visual Studio or Visual Studio Code) to configure the code.
 
-1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
-1. Enter a friendly name for the application, for example 'TodoListService-OBO-CA' and select 'Web app / API' as the *Application Type*.
-1. For the *sign-on URL*, enter the base URL for the sample, which is by default `https://localhost:44321/`.
-1. Click on **Create** to create the application.
-1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
-1. Then click on **Settings**, and choose **Properties**.
-1. For the App ID URI, replace the guid in the generated URI 'https://\<your_tenant_name\>/\<guid\>', with the name of your service, for example, 'https://\<your_tenant_name\>/TodoListService-OBO-CA' (replacing `<your_tenant_name>` with the name of your Azure AD tenant)
-1. From the Settings menu, choose **Keys** and add a new entry in the Password section:
+> In the steps below, "ClientID" is the same as "Application ID" or "AppId".
 
-   - Type a key description (of instance `app secret`),
-   - Select a key duration of either **In 1 year**, **In 2 years**, or **Never Expires**.
-   - When you save this page, the key value will be displayed, copy, and save the value in a safe location.
-   - You'll need this key later to configure the project in Visual Studio. This key value will not be displayed again, nor retrievable by any other means,
-     so record it as soon as it is visible from the Azure portal.
-1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then:
+1. Open the `TodoListService\Web.config` file.
+1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
+1. Find the key `ida:ClientID` and replace the existing value with the application ID (clientId) of `ToDoListService-OBO-CA-ASP.NET` app copied from the Azure portal.
+1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `ToDoListService-OBO-CA-ASP.NET` copied from the Azure portal.
+1. Find the key `ida:CAProtectedResourceScope` and replace the existing value with Scope.
 
-   - click on **Add**, then **Select an API**, and type `Microsoft Graph` in the textbox. Then, click on  **Select Permissions** and select **Sign in and read user profile**.
-   - click on **Add**, then **Select an API**, and type `DownstreamService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'DownstreamService-OBO-CA'**.
+### Register the service app (ToDoListService-ASP.NET)
 
-#### Register the client app (TodoListClient-DotNet-OBO-CA)
+1. Navigate to the [Azure portal](https://portal.azure.com) and select the **Azure AD** service.
+1. Select the **App Registrations** blade on the left, then select **New registration**.
+1. In the **Register an application page** that appears, enter your application's registration information:
+   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example `ToDoListService-ASP.NET`.
+   - Under **Supported account types**, select **Accounts in this organizational directory only**.
+1. Select **Register** to create the application.
+1. In the app's registration screen, find and note the **Application (client) ID**. You use this value in your app's configuration file(s) later in your code.
+1. Select **Save** to save your changes.
+1. In the app's registration screen, select the **Certificates & secrets** blade in the left to open the page where we can generate secrets and upload certificates.
+1. In the **Client secrets** section, select **New client secret**:
+   - Type a key description (for instance `app secret`),
+   - Select one of the available key durations (**In 1 year**, **In 2 years**, or **Never Expires**) as per your security posture.
+   - The generated key value will be displayed when you select the **Add** button. Copy the generated value for use in the steps later.
+   - You'll need this key later in your code's configuration files. This key value will not be displayed again, and is not retrievable by any other means, so make sure to note it from the Azure portal before navigating to any other screen or blade.
+1. In the app's registration screen, select the **API permissions** blade in the left to open the page where we add access to the APIs that your application needs.
+   - Select the **Add a permission** button and then,
+   - Ensure that the **My APIs** tab is selected.
+   - In the list of APIs, select the API `ToDoListService-OBO-CA-ASP.NET`.
+   - In the **Delegated permissions** section, select the **Access 'ToDoListService-OBO-CA-ASP.NET'** in the list. Use the search box if necessary.
+   - Select the **Add permissions** button at the bottom.
+   - Select the **Add a permission** button and then:
+   - Ensure that the **Microsoft APIs** tab is selected.
+   - In the *Commonly used Microsoft APIs* section, select **Microsoft Graph**
+   - In the **Delegated permissions** section, select the **User.Read** in the list. Use the search box if necessary.
+   - Select the **Add permissions** button at the bottom.
+1. In the app's registration screen, select the **Expose an API** blade to the left to open the page where you can declare the parameters to expose this app as an API for which client applications can obtain [access tokens](https://docs.microsoft.com/azure/active-directory/develop/access-tokens) for.
+The first thing that we need to do is to declare the unique [resource](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow) URI that the clients will be using to obtain access tokens for this Api. To declare an resource URI, follow the following steps:
+   - Select `Set` next to the **Application ID URI** to generate a URI that is unique for this app.
+   - For this sample, accept the proposed Application ID URI (`api://{clientId}`) by selecting **Save**.
+1. All APIs have to publish a minimum of one [scope](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-auth-code-flow#request-an-authorization-code) for the client's to obtain an access token successfully. To publish a scope, follow the following steps:
+   - Select **Add a scope** button open the **Add a scope** screen and Enter the values as indicated below:
+        - For **Scope name**, use `access_as_user`.
+        - Select **Admins and users** options for **Who can consent?**.
+        - For **Admin consent display name** type `Access ToDoListService-ASP.NET`.
+        - For **Admin consent description** type `Allows the app to access ToDoListService-ASP.NET as the signed-in user.`
+        - For **User consent display name** type `Access ToDoListService-ASP.NET`.
+        - For **User consent description** type `Allow the application to access ToDoListService-ASP.NET on your behalf.`
+        - Keep **State** as **Enabled**.
+        - Select the **Add scope** button on the bottom to save this scope.
 
-1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
-1. Enter a friendly name for the application, for example 'TodoListClient-DotNet-OBO-CA' and select 'Native' as the *Application Type*.
-1. For the redirect URI, enter `https://TodoListClient`. Note that the Redirect URI will not be used in this sample, but it needs to be defined nonetheless.
-1. Click on **Create** to create the application.
-1. In the succeeding page, Find the *Application ID* value and copy it to the clipboard. You'll need it to configure the Visual Studio configuration file for this project.
-1. Then click on **Settings**, and choose **Required Permission**.
-1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then,
-   click on **Add**, then **Select an API**, and type `TodoListService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'TodoListService-OBO-CA'**.
+#### Configure the service app (ToDoListService-ASP.NET) to use your app registration
 
-#### [Optionally] Register the SPA app (TodoListSPA-OBO-CA)
+Open the project in your IDE (like Visual Studio or Visual Studio Code) to configure the code.
 
-1. In the  **Azure Active Directory** pane, click on **App registrations** and choose **New application registration**.
-1. Enter a friendly name for the application, for example 'TodoListSPA-OBO-CA' and select 'Web app / API' as the *Application Type*.
-1. For the *sign-on URL*, enter the base URL for the sample. By default, this sample uses `http://localhost:16969/`.
-1. Click **Create** to create the application.
-1. In the succeeding page, Find the *Application ID* value and record it for later. You'll need it to configure the Visual Studio configuration file for this project.
-1. Enable the OAuth 2 implicit grant for your application by choosing **Manifest** at the top of the application's page. Open the inline manifest editor.
-   Search for the ``oauth2AllowImplicitFlow`` property. You will find that it is set to ``false``; change it to ``true`` and click on **Save** to save the manifest.
-1. Then click on **Settings**, and choose **Properties**.
-1. For the App ID URI, replace the guid in the generated URI 'https://\<your_tenant_name\>/\<guid\>', with the name of your service, for example, 'https://\<your_tenant_name\>/TodoListSPA-OBO-CA' (replacing `<your_tenant_name>` with the name of your Azure AD tenant)
-1. Configure Permissions for your application. To that extent, in the Settings menu, choose the 'Required permissions' section and then,
-   click on **Add**, then **Select an API**, and type `TodoListService-OBO-CA` in the textbox. Then, click on  **Select Permissions** and select **Access 'TodoListService-OBO-CA'**.
+> In the steps below, "ClientID" is the same as "Application ID" or "AppId".
 
-#### Configure known client applications for service (TodoListService-OBO-CA)
+1. Open the `TodoListService\Web.config` file.
+1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
+1. Find the key `ida:ClientID` and replace the existing value with the application ID (clientId) of `ToDoListService-OBO-CA-ASP.NET` app copied from the Azure portal.
+1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `ToDoListService-OBO-CA-ASP.NET` copied from the Azure portal.
+1. Find the key `ida:CAProtectedResourceScope` and replace the existing value with Scope.
 
-For the middle tier web API (`TodoListService-OBO-CA`) to be able to call the downstream web APIs, the user must grant the middle tier permission to do so in the form of consent.
-However, since the middle tier has no interactive UI of its own, you need to explicitly bind the client app registration in Azure AD, with the registration for the web API.
-This binding merges the consent required by both the client & middle tier into a single dialog, which will be presented to the user by the client.
-You can do so by adding the "Client ID" of the client app, to the manifest of the web API in the `knownClientApplications` property. Here's how:
+### Register the client app (TodoListClient)
 
-1. In the [Azure portal](https://portal.azure.com), navigate to your `TodoListService-OBO-CA` app registration, and open the manifest editor by clicking on **Manifest**.
-1. In the manifest, locate the `knownClientApplications` array property, and add the
-   Client ID of the client application (`TodoListClient-DotNet-OBO-CA`) as an element.
-   After you're done, your code should look like the following snippet with as many GUIDs as you have clients:
-   `"knownClientApplications": ["94da0930-763f-45c7-8d26-04d5938baab2"]`
-1. Save the TodoListService manifest by clicking the **Save** button.
+1. Navigate to the [Azure portal](https://portal.azure.com) and select the **Azure AD** service.
+1. Select the **App Registrations** blade on the left, then select **New registration**.
+1. In the **Register an application page** that appears, enter your application's registration information:
+   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example `TodoListClient`.
+   - Under **Supported account types**, select **Accounts in this organizational directory only**.
+1. Select **Register** to create the application.
+1. In the app's registration screen, find and note the **Application (client) ID**. You use this value in your app's configuration file(s) later in your code.
+1. In the app's registration screen, select **Authentication** in the menu.
+   - If you don't have a platform added, select **Add a platform** and select the **Public client (mobile & desktop)** option.
+   - In the **Redirect URIs** | **Suggested Redirect URIs for public clients (mobile, desktop)** section, select **https://login.microsoftonline.com/common/oauth2/nativeclient**
+1. Select **Save** to save your changes.
+1. In the app's registration screen, select the **API permissions** blade in the left to open the page where we add access to the APIs that your application needs.
+   - Select the **Add a permission** button and then,
+   - Ensure that the **My APIs** tab is selected.
+   - In the list of APIs, select the API `ToDoListService-ASP.NET`.
+   - In the **Delegated permissions** section, select the **Access 'ToDoListService-ASP.NET'** in the list. Use the search box if necessary.
+   - Select the **Add permissions** button at the bottom.
 
-### Step 3:  Configure the sample to use your Azure AD tenant
+#### Configure the client app (TodoListClient) to use your app registration
 
-In the steps below, "ClientID" is the same as "Application ID" or "AppId".
+Open the project in your IDE (like Visual Studio or Visual Studio Code) to configure the code.
 
-Open the solution in Visual Studio to configure the projects
+> In the steps below, "ClientID" is the same as "Application ID" or "AppId".
 
-#### Configure the service project
+1. Open the `TodoListClient\App.config` file.
+1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
+1. Find the key `ida:ClientId` and replace the existing value with the application ID (clientId) of `TodoListClient` app copied from the Azure portal.
+1. Find the key `todo:TodoListServiceScope` and replace the existing value with default API scope.
 
-1. Open the `TodoListService\Web.Config` file
-1. Find the app key `ida:Tenant` and replace the existing value with your AAD tenant name.
-1. Find the app key `ida:Audience` and replace the existing value with the App ID URI you registered earlier for the TodoListService-OBO-CA app. For instance use `https://<your_tenant_name>/TodoListService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
-1. Find the app key `ida:AppKey` and replace the existing value with the key you saved during the creation of the `TodoListService-OBO-CA` app, in the Azure portal.
-1. Find the app key `ida:ClientID` and replace the existing value with the application ID (clientId) of the `TodoListService-OBO-CA` application copied from the Azure portal.
-1. Find the app key `ida:CAProtectedResource` and replace the existing value with the App ID URI you registered earlier for the DownstreamService-OBO-CA app. For instance use `https://<your_tenant_name>/DownstreamService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
+### Register the web app (TodoListWebApp-aspnet)
 
-#### Configure the client project
+1. Navigate to the [Azure portal](https://portal.azure.com) and select the **Azure AD** service.
+1. Select the **App Registrations** blade on the left, then select **New registration**.
+1. In the **Register an application page** that appears, enter your application's registration information:
+   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example `TodoListWebApp-aspnet`.
+   - Under **Supported account types**, select **Accounts in this organizational directory only**.
+   - In the **Redirect URI (optional)** section, select **Web** in the combo-box and enter the following redirect URI: `https://localhost:44379/`.
+     > Note that there are more than one redirect URIs used in this sample. You'll need to add them from the **Authentication** tab later after the app has been created successfully.
+1. Select **Register** to create the application.
+1. In the app's registration screen, find and note the **Application (client) ID**. You use this value in your app's configuration file(s) later in your code.
+1. In the app's registration screen, select **Authentication** in the menu.
+   - If you don't have a platform added, select **Add a platform** and select the **Web** option.
+   - In the **Redirect URIs** section, enter the following redirect URIs.
+      - `https://localhost:44379/signin-oidc`
+   - In the **Logout URL** section, set it to `https://localhost:44379/signout-oidc`.
+1. Select **Save** to save your changes.
+1. In the app's registration screen, select the **Certificates & secrets** blade in the left to open the page where we can generate secrets and upload certificates.
+1. In the **Client secrets** section, select **New client secret**:
+   - Type a key description (for instance `app secret`),
+   - Select one of the available key durations (**In 1 year**, **In 2 years**, or **Never Expires**) as per your security posture.
+   - The generated key value will be displayed when you select the **Add** button. Copy the generated value for use in the steps later.
+   - You'll need this key later in your code's configuration files. This key value will not be displayed again, and is not retrievable by any other means, so make sure to note it from the Azure portal before navigating to any other screen or blade.
+1. In the app's registration screen, select the **API permissions** blade in the left to open the page where we add access to the APIs that your application needs.
+   - Select the **Add a permission** button and then,
+   - Ensure that the **My APIs** tab is selected.
+   - In the list of APIs, select the API `ToDoListService-ASP.NET`.
+   - In the **Delegated permissions** section, select the **Access 'ToDoListService-ASP.NET'** in the list. Use the search box if necessary.
+   - Select the **Add permissions** button at the bottom.
 
-1. Open the `TodoListClient\App.Config` file
-1. Find the app key `ida:Tenant` and replace the existing value with your AAD tenant name.
-1. Find the app key `ida:ClientId` and replace the existing value with the application ID (clientId) of the `TodoListClient-DotNet-OBO-CA` application copied from the Azure portal.
-1. Find the app key `ida:RedirectUri` and replace the existing value with the Redirect URI for TodoListClient-DotNet-OBO-CA app. For instance use `https://<your_tenant_name>/TodoListClient-DotNet-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
-1. Find the app key `todo:TodoListResourceId` and replace the existing value with the App ID URI you registered earlier for the TodoListService-OBO-CA app. For instance use `https://<your_tenant_name>/TodoListService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
-1. Find the app key `todo:TodoListBaseAddress` and replace the existing value with the base address of the TodoListService-OBO-CA project (by default `https://localhost:44321/`).
+#### Configure the web app (TodoListWebApp-aspnet) to use your app registration
 
-#### [Optionally] Configure the SPA project
+Open the project in your IDE (like Visual Studio or Visual Studio Code) to configure the code.
 
-1. Open the `TodoListSPA\appconfig.js` file
-1. Find the app key `tenant` and replace the existing value with your AAD tenant name.
-1. Find the app key `clientId` and replace the existing value with the application ID (clientId) of the `TodoListSPA-OBO-CA` application copied from the Azure portal.
-1. Find the app key `redirectUri` and replace the existing value with the base address of the TodoListSPA-OBO-CA project (by default `http://localhost:16969/`).
-1. Find the app key `resourceId` and replace the existing value with the App ID URI you registered earlier for the TodoListService-OBO-CA app. For instance use `https://<your_tenant_name>/TodoListService-OBO-CA`, where `<your_tenant_name>` is the name of your Azure AD tenant.
-1. Find the app key `resourceBaseAddress` and replace the existing value with the base address of the TodoListService-OBO-CA project (by default `https://localhost:44321/`).
-1. While running the SPA app in the browser, take care to allow popups from this app.
+> In the steps below, "ClientID" is the same as "Application ID" or "AppId".
 
-### Step 4: Create and link a Conditional Access Policy
+1. Open the `TodoListWebApp\Web.config` file.
+1. Find the key `ida:TenantId` and replace the existing value with your Azure AD tenant ID.
+1. Find the key `ida:ClientId` and replace the existing value with the application ID (clientId) of `TodoListWebApp-aspnet` app copied from the Azure portal.
+1. Find the key `ida:ClientSecret` and replace the existing value with the key you saved during the creation of `TodoListWebApp-aspnet` copied from the Azure portal.
+1. Find the key `ida:TodoListServiceScope` and replace the existing value with default API scope.
 
-1. Inside the **Azure Active Directory** window, select the **Conditional access** button near the bottom of the list under `Security`.
-2. Go ahead and select **New Policy** and name your policy.
-3. Select the **Users and groups** button, select **All Users** in the **Include** tab.
-4. Select the **Cloud apps**, then hit the **Select apps** radio button in the **Include** tab, and select the `DownstreamService-OBO-CA`.
-5. Select the **Conditions** button, then hit **Client apps**, and enable **Configure** as well as select the **Select client apps** radio button and enable **Browser** and **Mobile apps and desktop clients**.
-6. Finally, select the **Grant** button and hit **Grant access**. Then check the **Require multi-factor authentication** option.
-7. Enable the policy and save. Access to your Web API now requires multi-factor authentication!
+#### Configure Known Client Applications for service (ToDoListService-ASP.NET)
 
-### Step 5:  Run the sample
+For a middle tier Web API (`ToDoListService-ASP.NET`) to be able to call a downstream Web API, the middle tier app needs to be granted the required permissions as well.
+However, since the middle tier cannot interact with the signed-in user, it needs to be explicitly bound to the client app in its **Azure AD** registration.
+This binding merges the permissions required by both the client and the middle tier Web Api and presents it to the end user in a single consent dialog. The user then consent to this combined set of permissions.
 
-Clean the solution, rebuild the solution, and run it.  You might want to go into the solution properties and set both projects as startup projects, with the service project starting first.
+To achieve this, you need to add the **Application Id** of the client app, in the Manifest of the Web API in the `knownClientApplications` property. Here's how:
 
-Explore the sample by signing in, adding items to the To Do list, removing the user account, and starting again.  The ToDo list service will take the user's access token, passed from the client, and use it to perform the On-Behalf-Of flow to access the Microsoft Graph API.
+1. In the [Azure portal](https://portal.azure.com), navigate to your `ToDoListService-ASP.NET` app registration, and select **Manifest** section.
+1. In the manifest editor, change the `"knownClientApplications": []` line so that the array contains 
+   the Client IDs of the client applications (`ToDoListService-ASP.NET`, `TodoListClient`, `TodoListWebApp-aspnet`) as elements of the array.
 
-If you hit the `Satisfy CA` button, the client app will do the same as above except the downstream API is not Graph.  In this case, it will request a token to the downstream web API with Conditional Access applied. The middle tier will encounter an error when attempting On-Behalf-Of, and will return back state in the `claims` parameter so the client can step up.  The user will then be prompted to do MFA.
+    For instance:
 
-## How to deploy this sample to Azure
+    ```json
+    "knownClientApplications": ["ca8dca8d-f828-4f08-82f5-325e1a1c6428"],
+    ```
 
-This project has two WebApp / Web API projects. To deploy them to Azure Web Sites, you'll need, for each one, to:
+1. **Save** the changes to the manifest.
 
-- create an Azure Web Site
-- publish the Web App / Web APIs to the web site, and
-- update its client(s) to call the web site instead of IIS Express.
+### Create and link a Conditional Access Policy
 
-Note that in this sample the `DownstreamService-OBO-CA` has an app registration, but does not
-correspond to a project (to keep the sample simple)
+1. Inside the **Azure Active Directory** window, select the **Conditional Access** button near the bottom of the list under **Security**.
 
-### Create and Publish the `TodoListService-OBO-CA` to an Azure Web Site
+    ![CA1](./ReadmeFiles/ca1.png)
 
-1. Sign in to the [Azure portal](https://portal.azure.com).
-2. Click `Create a resource` in the top left-hand corner, select **Web + Mobile** --> **Web App**, select the hosting plan and region, and give your web site a name, for example, `TodoListService-OBO-CA-contoso.azurewebsites.net`.  Click Create Web Site.
-3. Once the web site is created, click on it to manage it.  For this set of steps, download the publish profile by clicking **Get publish profile** and save it.  Other deployment mechanisms, such as from source control, can also be used.
-4. Switch to Visual Studio and go to the TodoListService project.  Right click on the project in the Solution Explorer and select `Publish`.  Click **Import Profile** on the bottom bar, and import the publish profile that you downloaded earlier.
-5. Click on **Settings** and in the `Connection` tab, update the Destination URL so that it is https, for example [https://TodoListService-OBO-CA-contoso.azurewebsites.net](https://TodoListService-OBO-CA-contoso.azurewebsites.net). Click Next.
-6. On the Settings tab, make sure `Enable Organizational Authentication` is NOT selected.  Click **Save**. Click on **Publish** on the main screen
-7. Visual Studio will publish the project and automatically open a browser to the URL of the project.  If you see the default web page of the project, the publication was successful.
+    ![CA2](./ReadmeFiles/ca2.png)
 
-### Update the Active Directory tenant application registration for `TodoListService-OBO-CA`
+1. Select **New Policy** and name your policy.
 
-1. Navigate to the [Azure portal](https://portal.azure.com).
-2. On the top bar, click on your account and under the **Directory** list, choose the Active Directory tenant containing the `TodoListService-OBO-CA` application.
-3. On the applications tab, select the `TodoListService-OBO-CA` application.
-4. From the Settings -> Reply URLs menu, update the Sign-On URL, and Reply URL fields to the address of your service, for example [https://TodoListService-OBO-CA-contoso.azurewebsites.net](https://TodoListService-OBO-CA-contoso.azurewebsites.net). Save the configuration.
+    ![CA3](./ReadmeFiles/ca3.png)
 
-### Update the `TodoListClient-DotNet-OBO-CA` to call the `TodoListService-OBO-CA` Running in Azure Web Sites
+1. Select the **Users and groups** button, choose **Select users and groups** in the **Include** tab.
 
-1. In Visual Studio, go to the `TodoListClient` project.
-2. Open `TodoListClient\App.Config`.  Only one change is needed - update the `todo:TodoListBaseAddress` key value to be the address of the website you published,
-   for example, [https://TodoListService-OBO-CA-contoso.azurewebsites.net](https://TodoListService-OBO-CA-contoso.azurewebsites.net).
-3. Run the client! If you are trying multiple different client types (for example, .Net, Windows Store, Android, iOS) you can have them all call this one published web API.
+    ![CA4](./ReadmeFiles/ca4.png)
 
-### {Optionally] Update the `TodoListSPA-OBO-CA` to call the `TodoListService-OBO-CA` Running in Azure Web Sites
+1. Select the **Cloud apps**, then hit the **Select apps** radio button in the **Include** tab, and select the `ToDoListService-OBO-CA-ASP.NET`.
 
-1. In Visual Studio, go to the `TodoListSPA` project.
-2. Open `TodoListSPA\appconfig.js`.  Only one change is needed - update the `todo:TodoListBaseAddress` key value to be the address of the website you published,
-   for example, [https://TodoListService-OBO-CA-contoso.azurewebsites.net](https://TodoListService-OBO-CA-contoso.azurewebsites.net).
-3. Run the client! If you are trying multiple different client types (for example, .Net, Windows Store, Android, iOS) you can have them all call this one published web API.
+    ![CA5](./ReadmeFiles/ca5.png)
 
-### {Optionally] Create and Publish the `TodoListSPA-OBO-CA` to an Azure Web Site
+1. Finally, select the **Grant** button and hit **Grant access**. Then check the **Require multi-factor authentication** option.
 
-1. Sign in to the [Azure portal](https://portal.azure.com).
-2. Click `Create a resource` in the top left-hand corner, select **Web + Mobile** --> **Web App**, select the hosting plan and region, and give your web site a name, for example, `TodoListSPA-OBO-CA-contoso.azurewebsites.net`.  Click Create Web Site.
-3. Once the web site is created, click on it to manage it.  For this set of steps, download the publish profile by clicking **Get publish profile** and save it.  Other deployment mechanisms, such as from source control, can also be used.
-4. Switch to Visual Studio and go to the TodoListService project.  Right click on the project in the Solution Explorer and select `Publish`.  Click **Import Profile** on the bottom bar, and import the publish profile that you downloaded earlier.
-5. Click on **Settings** and in the `Connection` tab, update the Destination URL so that it is https, for example [https://TodoListSPA-OBO-CA-contoso.azurewebsites.net](https://TodoListSPA-OBO-CA-contoso.azurewebsites.net). Click Next.
-6. On the Settings tab, make sure `Enable Organizational Authentication` is NOT selected.  Click **Save**. Click on **Publish** on the main screen
-7. Visual Studio will publish the project and automatically open a browser to the URL of the project.  If you see the default web page of the project, the publication was successful.
+    ![CA6](./ReadmeFiles/ca6.png)
 
-### {Optionally] Update the Active Directory tenant application registration for `TodoListSPA-OBO-CA`
+1. Enable the policy and save. Access to your web API now requires **multi-factor authentication**!
 
-1. Navigate to the [Azure portal](https://portal.azure.com).
-2. On the top bar, click on your account and under the **Directory** list, choose the Active Directory tenant containing the `TodoListSPA-OBO-CA` application.
-3. On the applications tab, select the `TodoListSPA-OBO-CA` application.
-4. From the Settings -> Reply URLs menu, update the Sign-On URL, and Reply URL fields to the address of your service, for example [https://TodoListSPA-OBO-CA-contoso.azurewebsites.net](https://TodoListSPA-OBO-CA-contoso.azurewebsites.net). Save the configuration.
+## Running the sample
 
-## About the Code
+> For Visual Studio Users
+>
+> Clean the solution, rebuild the solution, and run it.  You might want to go into the solution properties and set both projects as startup projects, with the service project starting first.
 
-This code builds on top of the [active-directory-dotnet-webapi-onbehalfof](https://github.com/Azure-samples/active-directory-dotnet-webapi-onbehalfof) sample, but adds support for conditional access.
+## Explore the sample
 
-In the Native App:
+### Explore by using native client
 
-**MainWindow.xaml.cs**: The method SignInCA method to understand how the client handles the claim param.  Here you can see the necessary client code to handle a Conditional Access claims challenge and construct a new request.
+1. **Sign in** using Azure AD credentials. When the user signs-in for the first time , a consent screen is presented. This consent screen lets the user consent for the application to access the web API. After sign-in, you can add items to the To Do list.  The ToDo list service will take the user's access token, passed from the client, and use it to perform the On-Behalf-Of flow to access the Microsoft Graph API.
 
-In the Web Service:
+    ![TodoListClient](./ReadmeFiles/TodoListClient.png)
+1. If you hit the `Satisfy CA` button, the client app will do the same as above except the downstream API is not Graph.  In this case, it will request a token to the downstream web API with Conditional Access applied. The middle tier will encounter an error when attempting On-Behalf-Of, and will return back state in the `claims` parameter so the client can step up. The user will then be prompted to do MFA.
 
-**AccessCaApiController.cs**: Check out the HTTP GET endpoint in this controller to see how we initiate and handle the `interaction_required` error. Specifically, the code attempts to get a token for the downstream service On-Behalf-Of the user.  When the claims challenge is generated, this method will parse the exception and return back to the client the claims parameter so it can step up.
+    ![TodoListClientMFA](./ReadmeFiles/TodoListClientMFA.png)
+
+### Explore by using web app
+
+1. Open your browser and navigate to `https://localhost:44318`.
+1. **Sign in** using Azure AD credentials. When the user signs-in for the first time , a consent screen is presented. This consent screen lets the user consent for the application to access the web API.
+
+    You will see claims from the signed-in user's token.
+
+   ![UserClaims](./ReadmeFiles/UserClaims.png)
+1. Select ToDoList from navigation bar and you can create or delete the todo list items.
+
+   ![ToDoListWebApp](./ReadmeFiles/ToDoListWebApp.png)
+
+> :information_source: Did the sample not work for you as expected? Then please reach out to us using the [GitHub Issues](../../../issues) page.
+
+## We'd love your feedback!
+
+Were we successful in addressing your learning objective? Consider taking a moment to [share your experience with us](Enter_Survey_Form_Link).
+
+## About the code
+
+> - Describe where the code uses auth libraries, or calls the graph
+> - Describe specific aspects (e.g. caching, validation etc.)
+
+## More information
+
+- [Microsoft identity platform (Azure Active Directory for developers)](https://docs.microsoft.com/azure/active-directory/develop/)
+- [Overview of Microsoft Authentication Library (MSAL)](https://docs.microsoft.com/azure/active-directory/develop/msal-overview)
+- [Quickstart: Register an application with the Microsoft identity platform (Preview)](https://docs.microsoft.com/azure/active-directory/develop/quickstart-register-app)
+- [Quickstart: Configure a client application to access web APIs (Preview)](https://docs.microsoft.com/azure/active-directory/develop/quickstart-configure-app-access-web-apis)
+- [Understanding Azure AD application consent experiences](https://docs.microsoft.com/azure/active-directory/develop/application-consent-experience)
+- [Understand user and admin consent](https://docs.microsoft.com/azure/active-directory/develop/howto-convert-app-to-be-multi-tenant#understand-user-and-admin-consent)
+- [Application and service principal objects in Azure Active Directory](https://docs.microsoft.com/azure/active-directory/develop/app-objects-and-service-principals)
+- [National Clouds](https://docs.microsoft.com/azure/active-directory/develop/authentication-national-cloud#app-registration-endpoints)
+- [MSAL code samples](https://docs.microsoft.com/azure/active-directory/develop/sample-v2-code)
+    // Add MSAL.NET and/or Identity.Web Docs
+
+For more information about how OAuth 2.0 protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](https://docs.microsoft.com/azure/active-directory/develop/authentication-flows-app-scenarios).
 
 ## Community Help and Support
 
-Use [Stack Overflow](http://stackoverflow.com/questions/tagged/adal) to get support from the community.
+Use [Stack Overflow](http://stackoverflow.com/questions/tagged/msal) to get support from the community.
 Ask your questions on Stack Overflow first and browse existing issues to see if someone has asked your question before.
-Make sure that your questions or comments are tagged with [`adal` `dotnet`].
+Make sure that your questions or comments are tagged with [`azure-active-directory` `azure-ad-b2c` `ms-identity` `adal` `msal`].
 
-If you find a bug in the sample, please raise the issue on [GitHub Issues](../../issues).
+If you find a bug in the sample, raise the issue on [GitHub Issues](../../../issues).
 
-To provide a recommendation, visit the following [User Voice page](https://feedback.azure.com/forums/169401-azure-active-directory).
+To provide feedback on or suggest features for Azure Active Directory, visit [User Voice page](https://feedback.azure.com/forums/169401-azure-active-directory).
 
 ## Contributing
 
 If you'd like to contribute to this sample, see [CONTRIBUTING.MD](/CONTRIBUTING.md).
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## More information
-
-For more information, see ADAL.NET's conceptual documentation:
-For the TodoList client:
-
-- [Recommended pattern to acquire a token](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/wiki/AcquireTokenSilentAsync-using-a-cached-token#recommended-pattern-to-acquire-a-token)
-- [Acquiring tokens interactively in public client applications](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/wiki/Acquiring-tokens-interactively---Public-client-application-flows)
-
-For the Todo List Service:
-
-- [Service to service calls on behalf of the user](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/wiki/Service-to-service-calls-on-behalf-of-the-user).
-
-For both:
-
-- [Customizing Token cache serialization](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/wiki/Token-cache-serialization)
-- For more information about how the protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](http://go.microsoft.com/fwlink/?LinkId=394414).
-- To learn more about Conditional Access, checkout [Conditional Access in Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/active-directory-conditional-access).

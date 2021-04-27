@@ -1,163 +1,319 @@
 {
-  /*
-  This section describes the Azure AD  Applications to configure, and their dependencies
-  */
   "Sample": {
-    "Title": " .NET 4.5 MVC Web API protected by Azure AD that receives tokens from a client and uses ADAL to get tokens for calling a downstream web API with a Conditional Access policy applied to it",
-    "Level": 400,
-    "Client": ".NET Framework 4.5 Console, JavaScript SPA",
-    "Service": "ASP.NET Web API"
+    "Title": "Use OpenID Connect to sign in users to Microsoft identity platform and call web API",
+    "Level": 300,
+    "Client": ".NET web App"
   },
-  "AADApps": [
-    {
-      "Id": "downstreamService",
-      "Name": "DownstreamService-OBO-CA",
-      "IsPublicClient": false,
-      "HomePage": "https://localhost:44302/"
-    },
-    {
-      "Id": "service",
-      "Name": "TodoListService-OBO-CA",
-      "IsPublicClient": false,
-      "HomePage": "https://localhost:44321/",
-      "PasswordCredentials": "Auto", // We'd want password credentals to be generated automatically
-      "RequiredResourcesAccess": [
+  "AppRegistrations": [
+   {
+      "x-ms-id": "service",
+      "x-ms-name": "ToDoListService-OBO-CA-ASP.NET",
+      "x-ms-version": "2.0",
+      "oauth2AllowImplicitFlow": false,
+      "oauth2AllowIdTokenImplicitFlow": false,
+      "codeConfigurations": [
         {
-          "Resource": "Microsoft Graph",
-          "DelegatedPermissions": [ "User.Read" ]
-        },
+        "settingFile": "/TodoListService/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
         {
-          "Resource": "downstreamService",
-          "DelegatedPermissions": [ "user_impersonation" ]
-        }
-      ]
-    },
-    {
-      "Id": "client",
-      "Name": "TodoListClient-DotNet-OBO-CA",
-      "IsPublicClient": true,
-      "RequiredResourcesAccess": [
+        "settingFile": "/TodoListClient/App.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
         {
-          "Resource": "service",
-          "DelegatedPermissions": [ "user_impersonation" ]
-        }
-      ]
-    },
-    {
-      "Id": "spa",
-      "Name": "TodoListSPA-OBO-CA",
-      "IsPublicClient": false,
-      "HomePage": "http://localhost:16969/",
-      "AllowImplicitFlow": true,
-      "RequiredResourcesAccess": [
-        {
-          "Resource": "service",
-          "DelegatedPermissions": [ "user_impersonation" ]
-        }
-      ]
+        "settingFile": "/TodoListWebApp/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        } ]
     }
-  ],
-
-  /*
-    This section describes the users that need to be created to test the sample (if any) with their roles and groups
-  */
-  "Users": [
-    /*
-    {
-      "Alias": "user1"
+   {
+      "x-ms-id": "service",
+      "x-ms-name": "ToDoListService-ASP.NET",
+      "x-ms-version": "2.0",
+      "oauth2AllowImplicitFlow": false,
+      "oauth2AllowIdTokenImplicitFlow": false,
+      "requiredResourceAccess": [
+        {
+          "x-ms-resourceAppName": "ToDoListService-OBO-CA-ASP.NET",
+          "resourceAppId": service,
+          "resourceAccess": [
+            {
+              "id": "unknown",
+              "type": "Scope",
+              "x-ms-name": "access_as_user"
+            } ]
+        }
+      ],
+      "codeConfigurations": [
+        {
+        "settingFile": "/TodoListService/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
+        {
+        "settingFile": "/TodoListClient/App.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
+        {
+        "settingFile": "/TodoListWebApp/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        } ]
     }
-*/
-  ],
-
-
-  /*
-    This section describes how to update (the code in configuration files) from the apps coordinates
-   Each section describes a configuration file, for one of the apps, it's type (XML, JSon, plain text), its location
-   with respect to the root of the sample, and the mappping (which string in the config file is mapped to which value
-  */
-  "CodeConfiguration": [
-    {
-      "App": "service",
-      "SettingKind": "XML",
-      "SettingFile": "\\..\\TodoListService\\Web.Config",
-      "Mappings": [
+   {
+      "x-ms-id": "client",
+      "x-ms-name": "TodoListClient",
+      "x-ms-version": "2.0",
+      "replyUrlsWithType": [
         {
-          "key": "ida:Tenant",
-          "value": "$tenantName"
-        },
+          "url": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+          "type": "InstalledClient"
+        } ],
+      "oauth2AllowImplicitFlow": false,
+      "oauth2AllowIdTokenImplicitFlow": false,
+      "requiredResourceAccess": [
         {
-          "key": "ida:Audience",
-          "value": "service.IdentifierUris"
-        },
-        {
-          "key": "ida:AppKey",
-          "value": "$serviceAppKey"
-        },
-        {
-          "key": "ida:ClientID",
-          "value": "service.AppId"
-        },
-        {
-          "key": "ida:CAProtectedResource",
-          "value": "downstreamService.IdentifierUris"
+          "x-ms-resourceAppName": "ToDoListService-OBO-CA-ASP.NET",
+          "resourceAppId": service,
+          "resourceAccess": [
+            {
+              "id": "unknown",
+              "type": "Scope",
+              "x-ms-name": "access_as_user"
+            } ]
         }
-      ]
-    },
-
-    {
-      "App": "client",
-      "SettingKind": "XML",
-      "SettingFile": "\\..\\TodoListClient\\App.Config",
-      "Mappings": [
+      ],
+      "codeConfigurations": [
         {
-          "key": "ida:Tenant",
-          "value": "$tenantName"
+        "settingFile": "/TodoListService/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
+        {
+        "settingFile": "/TodoListClient/App.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
+        {
+        "settingFile": "/TodoListWebApp/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        } ]
+    }
+   {
+      "x-ms-id": "webApp",
+      "x-ms-name": "TodoListWebApp-aspnet",
+      "x-ms-version": "2.0",
+      "replyUrlsWithType": [
+        {
+          "url": "https://localhost:44379/",
+          "type": "Web"
         },
         {
-          "key": "ida:ClientId",
-          "value": "client.AppId"
-        },
+          "url": " https://localhost:44379/signin-oidc",
+          "type": "Web"
+        } ],
+      "oauth2AllowImplicitFlow": false,
+      "oauth2AllowIdTokenImplicitFlow": false,
+      "requiredResourceAccess": [
         {
-          "key": "ida:RedirectUri",
-          "value": ".ReplyUrls"
-        },
-        {
-          "key": "todo:TodoListResourceId",
-          "value": "service.IdentifierUris"
-        },
-        {
-          "key": "todo:TodoListBaseAddress",
-          "value": "service.HomePage"
+          "x-ms-resourceAppName": "ToDoListService-OBO-CA-ASP.NET",
+          "resourceAppId": service,
+          "resourceAccess": [
+            {
+              "id": "unknown",
+              "type": "Scope",
+              "x-ms-name": "access_as_user"
+            } ]
         }
-      ]
-    },
-
-    {
-      "App": "spa",
-      "SettingKind": "Text",
-      "SettingFile": "\\..\\TodoListSPA\\appconfig.js",
-      "Mappings": [
+      ],
+      "codeConfigurations": [
         {
-          "key": "tenant",
-          "value": "$tenantName"
-        },
+        "settingFile": "/TodoListService/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
         {
-          "key": "clientId",
-          "value": ".AppId"
-        },
+        "settingFile": "/TodoListClient/App.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        }, 
         {
-          "key": "redirectUri",
-          "value": ".HomePage"
-        },
-        {
-          "key": "resourceId",
-          "value": "service.IdentifierUris"
-        },
-        {
-          "key": "resourceBaseAddress",
-          "value": "service.HomePage"
-        }
-      ]
+        "settingFile": "/TodoListWebApp/Web.config", 
+          "replaceTokens": 
+            {
+            /** 
+            * Note: The following 'key-value' pairs are for illustration only; you may
+            * not have all of them in your configuration file. Azure portal will replace
+            * the values (i.e. text) below with the actual app credentials.
+            * Finally, don't forget to remove this comment.
+            */
+            "appId": "Enter_the_Application_Id_Here",
+            "redirectUri": "Enter_the_Redirect_Uri_Here",
+            "tenantId": "Enter_the_Tenant_Info_Here",
+            "clientSecret": "Enter_the_Client_Secret_Here",
+            "authorityEndpointHost": "Enter_the_Cloud_Instance_Id_Here",
+            "msgraphEndpointHost": "Enter_the_Graph_Endpoint_Here",
+            "signInAudience": "Enter_the_Sign-in_Audience_Here"
+            }
+        } ]
     }
   ]
 }

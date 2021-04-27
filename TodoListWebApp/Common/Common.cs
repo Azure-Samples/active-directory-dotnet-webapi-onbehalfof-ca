@@ -1,0 +1,91 @@
+﻿//using TodoList.Shared;
+
+namespace TodoListWebApp
+{
+    //public static class Common
+    //{
+    //    static TokenAcquisition _tokenAcquisition = new TokenAcquisition(SetOptions.SetMicrosoftIdOptions(), SetOptions.SetConClientAppOptions(), CacheType.InMemoryCache);
+
+    //    /// <summary>
+    //    /// Creates an MSAL Confidential client application by calling BuildConfidentialClientApplicationAsync
+    //    /// </summary>
+    //    /// <returns></returns>
+    //    public static IConfidentialClientApplication BuildConfidentialClientApplication()
+    //    {
+    //        var app = _tokenAcquisition.BuildConfidentialClientApplicationAsync().Result;
+    //        return app;
+    //    }
+
+    //    /// <summary>
+    //    /// Calls method to Removes the account from the MSAL.NET cache.
+    //    /// </summary>
+    //    /// <returns></returns>
+    //    public static void RemoveAccount()
+    //    {
+    //        _tokenAcquisition.RemoveAccountAsync().ConfigureAwait(false);
+    //    }
+
+    //    /// <summary>
+    //    /// Call method to acquire Access Token for the signed-in user.
+    //    /// </summary>
+    //    /// <returns></returns>
+    //    public static async Task<AuthenticationResult> GetAccessTokenForUserAsync()
+    //    {
+    //        return await _tokenAcquisition.GetAccessTokenForUserAsync(new[] { AuthenticationConfig.TodoListServiceScope });
+    //    }
+
+    //    /// <summary>
+    //    /// Process the exception.
+    //    /// </summary>
+    //    /// <param name="exception">Exception.</param>
+    //    public static void IncrementalConsentExceptionHandler(Exception ex)
+    //    {
+    //        string redirectUri = HttpContext.Current.Request.Url.ToString();
+    //        MicrosoftIdentityWebChallengeUserException microsoftIdentityWebChallengeUserException = ex as MicrosoftIdentityWebChallengeUserException;
+    //        if (microsoftIdentityWebChallengeUserException == null)
+    //        {
+    //            microsoftIdentityWebChallengeUserException = ex.InnerException as MicrosoftIdentityWebChallengeUserException;
+    //        }
+    //        if (CanBeSolvedByReSignInOfUser(microsoftIdentityWebChallengeUserException.MsalUiRequiredException))
+    //        {
+    //            HttpContext.Current.GetOwinContext().Authentication.Challenge(
+    //               new AuthenticationProperties { RedirectUri = redirectUri },
+    //               OpenIdConnectAuthenticationDefaults.AuthenticationType);
+    //        }
+    //    }
+
+    //    /// <summary>
+    //    /// Can the exception be solved by re-signing-in the user?.
+    //    /// </summary>
+    //    /// <param name="ex">Exception from which the decision will be made.</param>
+    //    /// <returns>Returns <c>true</c> if the issue can be solved by signing-in
+    //    /// the user, and <c>false</c>, otherwise.</returns>
+    //    private static bool CanBeSolvedByReSignInOfUser(MsalUiRequiredException ex)
+    //    {
+    //        if (ex == null)
+    //        {
+    //            throw new ArgumentNullException(nameof(ex));
+    //        }
+
+    //        // ex.ErrorCode != MsalUiRequiredException.UserNullError indicates a cache problem.
+    //        return ex.ErrorCode.ContainsAny(new[] { MsalError.UserNullError, MsalError.InvalidGrantError });
+    //    }
+
+    //    /// <summary>
+    //    /// Handling the auth redemption by MSAL.NET so that a token is available in the token cache
+    //    /// where it will be usable through the TokenAcquisition service
+    //    /// </summary>
+    //    /// <param name="context"></param>
+    //    /// <returns></returns>
+    //    private static async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedNotification context)
+    //    {
+    //        // Call MSAL.NET AcquireTokenByAuthorizationCode
+    //        var application = BuildConfidentialClientApplication();
+    //        var result = await application.AcquireTokenByAuthorizationCode(new[] { AuthenticationConfig.TodoListServiceScope },
+    //                                                                 context.ProtocolMessage.Code)
+    //                                .ExecuteAsync();
+
+    //        context.HandleCodeRedemption(null, result.IdToken);
+    //    }
+    //}
+}

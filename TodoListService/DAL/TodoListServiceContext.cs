@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
+﻿using System.Data.Entity;
 using TodoListService.Models;
 
 namespace TodoListService.DAL
@@ -21,7 +17,11 @@ namespace TodoListService.DAL
         }
 
         public DbSet<TodoItem> TodoItems { get; set; }
+        
         public DbSet<PerWebUserCache> PerUserCacheList { get; set; }
-    
+        /// <summary>
+        /// The app token cache table
+        /// </summary>
+       
     }
 }

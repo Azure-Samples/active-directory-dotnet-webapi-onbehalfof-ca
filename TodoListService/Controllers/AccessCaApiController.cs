@@ -1,16 +1,19 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Web.Aspnet;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
-using TodoListService.DAL;
 
 namespace TodoListService.Controllers
 {
@@ -19,55 +22,33 @@ namespace TodoListService.Controllers
     public class AccessCaApiController : ApiController
     {
         //
-        // The Client ID is used by the application to uniquely identify itself to Azure AD.
-        // The App Key is a credential used by the application to authenticate to Azure AD.
-        // The Tenant is the name of the Azure AD tenant in which this application is registered.
-        // The AAD Instance is the instance of Azure, for example public Azure or Azure China.
-        // The Authority is the sign-in URL of the tenant.
-        //
-        private static string aadInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
-        private static string tenant = ConfigurationManager.AppSettings["ida:Tenant"];
-        private static string clientId = ConfigurationManager.AppSettings["ida:ClientId"];
-        private static string appKey = ConfigurationManager.AppSettings["ida:AppKey"];
-
-        //
         // To authenticate to the Graph API, the app needs to know the Grah API's App ID URI.
         // To contact the Me endpoint on the Graph API we need the URL as well.
         //
-        private static string caResourceId = ConfigurationManager.AppSettings["ida:CAProtectedResource"];
+        private IEnumerable<string> caResourceIdScope = new List<string> { ConfigurationManager.AppSettings["ida:CAProtectedResourceScope"] };
 
+        HttpClient _httpClient = new HttpClient();
+
+        private string _TodoListDownstreamBaseAddress = "https://localhost:44392/";
         // Error Constants
         const String SERVICE_UNAVAILABLE = "temporarily_unavailable";
         const String INTERACTION_REQUIRED = "interaction_required";
 
+        TokenAcquisition _tokenAcquisition;
 
+        [HttpGet]
         // GET: api/ConditionalAccess
         public async Task<string> Get()
         {
             var scopeClaim = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope");
-            if (scopeClaim == null || (!scopeClaim.Value.ContainsAny("user_impersonation")))
+            if (scopeClaim == null || (!scopeClaim.Value.ContainsAny("access_as_user")))
             {
-                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'user_impersonation' or scope claim not found" });
+                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'access_as_user' or scope claim not found" });
             }
 
             AuthenticationResult result = null;
 
-            //
-            //   Use ADAL to get a token On Behalf Of the current user.  To do this we will need:
-            //      The Resource ID of the service we want to call.
-            //      The current user's access token, from the current request's authorization header.
-            //      The credentials of this application.
-            //      The username (UPN or email) of the user calling the API
-            //
-            ClientCredential clientCred = new ClientCredential(clientId, appKey);
-            var bootstrapContext = ClaimsPrincipal.Current.Identities.First().BootstrapContext as System.IdentityModel.Tokens.BootstrapContext;
-            string userName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn) != null ? ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value : ClaimsPrincipal.Current.FindFirst(ClaimTypes.Email).Value;
-            string userAccessToken = bootstrapContext.Token;
-            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
-
-            string authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
-            string userId = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
-            AuthenticationContext authContext = new AuthenticationContext(authority, new DbTokenCache(userId));
+            _tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
 
             // In the case of a transient error, retry once after 1 second, then abandon.
             // Retrying is optional.  It may be better, for your application, to return an error immediately to the user and have the user initiate the retry.
@@ -79,35 +60,15 @@ namespace TodoListService.Controllers
                 retry = false;
                 try
                 {
-                    result = await authContext.AcquireTokenAsync(caResourceId, clientCred, userAssertion);
-                }
-                catch (AdalClaimChallengeException ex)
-                {
-                    HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Claims) };
-                    throw new HttpResponseException(myMessage);
-                }
-                catch (AdalServiceException ex)
-                {
-                    if (ex.ErrorCode == "invalid_grant")
-                    {
-                        return ex.Message;
-                    }
-                    if (ex.ErrorCode == INTERACTION_REQUIRED )
-                    {
-                        HttpResponseMessage myMessage = new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden, ReasonPhrase = INTERACTION_REQUIRED, Content = new StringContent(ex.Message) };
+                    result = await _tokenAcquisition.GetUserTokenOnBehalfOfAsync(caResourceIdScope);
 
-                        throw new HttpResponseException(myMessage);
-                    }
+                    return "protected API successfully called";
                 }
-                catch (AdalException ex)
+                catch (MsalUiRequiredException ex)
                 {
-                    if (ex.ErrorCode == SERVICE_UNAVAILABLE)
-                    {
-                        // Transient error, OK to retry.
-                        retry = true;
-                        retryCount++;
-                        Thread.Sleep(1000);
-                    }
+                    await _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeaderAsync((caResourceIdScope),
+                        ex, HttpContext.Current.Response);
+                    throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden});
                 }
             } while ((retry == true) && (retryCount < 1));
 
@@ -120,8 +81,61 @@ namespace TodoListService.Controllers
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             HttpResponseMessage response = await httpClient.GetAsync(WebAPI2HttpEndpoint (App ID URI + "/endpoint");
             */
+        }
+        [HttpGet]
+        [Route("api/AccessCaApi/GetAll")]
+        // GET: api/AccessCaApi/GetAll
+        public async Task<List<string>> GetAll()
+        {
+            var scopeClaim = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/scope");
+            if (scopeClaim == null || (!scopeClaim.Value.ContainsAny("access_as_user")))
+            {
+                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Unauthorized, ReasonPhrase = "The Scope claim does not contain 'access_as_user' or scope claim not found" });
+            }
 
-            return "protected API successfully called";
+            AuthenticationResult result = null;
+
+            _tokenAcquisition = new TokenAcquisition(new AuthenticationConfig());
+
+            // In the case of a transient error, retry once after 1 second, then abandon.
+            // Retrying is optional.  It may be better, for your application, to return an error immediately to the user and have the user initiate the retry.
+            bool retry = false;
+            int retryCount = 0;
+
+            do
+            {
+                retry = false;
+                try
+                {
+                    result = await _tokenAcquisition.GetUserTokenOnBehalfOfAsync(caResourceIdScope);
+
+            }
+                catch (MsalUiRequiredException ex)
+            {
+                await _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeaderAsync((caResourceIdScope),
+                    ex, HttpContext.Current.Response);
+                throw new HttpResponseException(new HttpResponseMessage { StatusCode = HttpStatusCode.Forbidden});
+            }
+        } while ((retry == true) && (retryCount < 1));
+
+            /*
+             You can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+             Use this code below to call the downstream Web API OBO
+                */
+            string oboAccessToken = result.AccessToken;
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oboAccessToken);
+            List<string> lstUsers = new List<string>();
+            HttpResponseMessage response = await _httpClient.GetAsync(_TodoListDownstreamBaseAddress + "/api/CallGraph");
+            if (response != null && response.StatusCode == HttpStatusCode.OK)
+            {
+                string content = response.Content.ReadAsStringAsync().Result;
+                lstUsers = JsonConvert.DeserializeObject<List<string>>(content);
+
+                return lstUsers;
+            }
+
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
     }
 }

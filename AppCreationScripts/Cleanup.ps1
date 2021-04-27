@@ -1,22 +1,33 @@
-param([Parameter(Mandatory=$false)][PSCredential]$Credential=$null, [Parameter(Mandatory=$false)][string]$TenantId)
+[CmdletBinding()]
+param(    
+    [PSCredential] $Credential,
+    [Parameter(Mandatory=$False, HelpMessage='Tenant ID (This is a GUID which represents the "Directory ID" of the AzureAD tenant into which you want to create the apps')]
+    [string] $tenantId,
+    [Parameter(Mandatory=$False, HelpMessage='Azure environment to use while running the script (it defaults to AzureCloud)')]
+    [string] $azureEnvironmentName
+)
+
+#Requires -Modules AzureAD -RunAsAdministrator
+
+
+if ($null -eq (Get-Module -ListAvailable -Name "AzureAD")) { 
+    Install-Module "AzureAD" -Scope CurrentUser 
+} 
 Import-Module AzureAD
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = "Stop"
 
 Function Cleanup
 {
-<#
-.Description
-This function removes the Azure AD applications for the sample. These applications were created by the Configure.ps1 script
-#>
-   [CmdletBinding()]
-    param(
-        [Parameter(HelpMessage='Tenant ID (This is a GUID which represents the "Directory ID" of the AzureAD tenant into which you want to create the apps')]
-        [PSCredential] $Credential,
-        [string] $tenantId
-    )
+    if (!$azureEnvironmentName)
+    {
+        $azureEnvironmentName = "AzureCloud"
+    }
 
-   process
-   {
+    <#
+    .Description
+    This function removes the Azure AD applications for the sample. These applications were created by the Configure.ps1 script
+    #>
+
     # $tenantId is the Active Directory Tenant. This is a GUID which represents the "Directory ID" of the AzureAD tenant 
     # into which you want to create the apps. Look it up in the Azure portal in the "Properties" of the Azure AD. 
 
@@ -24,17 +35,17 @@ This function removes the Azure AD applications for the sample. These applicatio
     # you'll need to sign-in with creds enabling your to create apps in the tenant)
     if (!$Credential -and $TenantId)
     {
-        $creds = Connect-AzureAD -TenantId $tenantId
+        $creds = Connect-AzureAD -TenantId $tenantId -AzureEnvironmentName $azureEnvironmentName
     }
     else
     {
         if (!$TenantId)
         {
-            $creds = Connect-AzureAD -Credential $Credential
+            $creds = Connect-AzureAD -Credential $Credential -AzureEnvironmentName $azureEnvironmentName
         }
         else
         {
-            $creds = Connect-AzureAD -TenantId $tenantId -Credential $Credential
+            $creds = Connect-AzureAD -TenantId $tenantId -Credential $Credential -AzureEnvironmentName $azureEnvironmentName
         }
     }
 
@@ -43,44 +54,75 @@ This function removes the Azure AD applications for the sample. These applicatio
         $tenantId = $creds.Tenant.Id
     }
     $tenant = Get-AzureADTenantDetail
-    $tenantName =  ($tenant.VerifiedDomains | Where { $_._Default -eq $True }).Name
+    $tenantName =  ($tenant.VerifiedDomains | Where-Object { $_._Default -eq $True }).Name
     
     # Removes the applications
     Write-Host "Cleaning-up applications from tenant '$tenantName'"
 
-    Write-Host "Removing 'downstreamService' (DownstreamService-OBO-CA) if needed"
-    $app=Get-AzureADApplication -Filter "identifierUris/any(uri:uri eq 'https://$tenantName/DownstreamService-OBO-CA')"  
-    if ($app)
+    Write-Host "Removing 'service' (ToDoListService-OBO-CA-ASP.NET) if needed"
+    Get-AzureADApplication -Filter "DisplayName eq 'ToDoListService-OBO-CA-ASP.NET'"  | ForEach-Object {Remove-AzureADApplication -ObjectId $_.ObjectId }
+    $apps = Get-AzureADApplication -Filter "DisplayName eq 'ToDoListService-OBO-CA-ASP.NET'"
+    if ($apps)
     {
-        Remove-AzureADApplication -ObjectId $app.ObjectId
-        Write-Host "Removed."
+        Remove-AzureADApplication -ObjectId $apps.ObjectId
     }
 
-    Write-Host "Removing 'service' (TodoListService-OBO-CA) if needed"
-    $app=Get-AzureADApplication -Filter "identifierUris/any(uri:uri eq 'https://$tenantName/TodoListService-OBO-CA')"  
-    if ($app)
+    foreach ($app in $apps) 
     {
         Remove-AzureADApplication -ObjectId $app.ObjectId
-        Write-Host "Removed."
+        Write-Host "Removed ToDoListService-OBO-CA-ASP.NET.."
+    }
+    # also remove service principals of this app
+    Get-AzureADServicePrincipal -filter "DisplayName eq 'ToDoListService-OBO-CA-ASP.NET'" | ForEach-Object {Remove-AzureADServicePrincipal -ObjectId $_.Id -Confirm:$false}
+    
+    Write-Host "Removing 'service' (ToDoListService-ASP.NET) if needed"
+    Get-AzureADApplication -Filter "DisplayName eq 'ToDoListService-ASP.NET'"  | ForEach-Object {Remove-AzureADApplication -ObjectId $_.ObjectId }
+    $apps = Get-AzureADApplication -Filter "DisplayName eq 'ToDoListService-ASP.NET'"
+    if ($apps)
+    {
+        Remove-AzureADApplication -ObjectId $apps.ObjectId
     }
 
-    Write-Host "Removing 'client' (TodoListClient-DotNet-OBO-CA) if needed"
-    $app=Get-AzureADApplication -Filter "DisplayName eq 'TodoListClient-DotNet-OBO-CA'"  
-    if ($app)
+    foreach ($app in $apps) 
     {
         Remove-AzureADApplication -ObjectId $app.ObjectId
-        Write-Host "Removed."
+        Write-Host "Removed ToDoListService-ASP.NET.."
+    }
+    # also remove service principals of this app
+    Get-AzureADServicePrincipal -filter "DisplayName eq 'ToDoListService-ASP.NET'" | ForEach-Object {Remove-AzureADServicePrincipal -ObjectId $_.Id -Confirm:$false}
+    
+    Write-Host "Removing 'client' (TodoListClient) if needed"
+    Get-AzureADApplication -Filter "DisplayName eq 'TodoListClient'"  | ForEach-Object {Remove-AzureADApplication -ObjectId $_.ObjectId }
+    $apps = Get-AzureADApplication -Filter "DisplayName eq 'TodoListClient'"
+    if ($apps)
+    {
+        Remove-AzureADApplication -ObjectId $apps.ObjectId
     }
 
-    Write-Host "Removing 'spa' (TodoListSPA-OBO-CA) if needed"
-    $app=Get-AzureADApplication -Filter "identifierUris/any(uri:uri eq 'https://$tenantName/TodoListSPA-OBO-CA')"  
-    if ($app)
+    foreach ($app in $apps) 
     {
         Remove-AzureADApplication -ObjectId $app.ObjectId
-        Write-Host "Removed."
+        Write-Host "Removed TodoListClient.."
+    }
+    # also remove service principals of this app
+    Get-AzureADServicePrincipal -filter "DisplayName eq 'TodoListClient'" | ForEach-Object {Remove-AzureADServicePrincipal -ObjectId $_.Id -Confirm:$false}
+    
+    Write-Host "Removing 'webApp' (TodoListWebApp-aspnet) if needed"
+    Get-AzureADApplication -Filter "DisplayName eq 'TodoListWebApp-aspnet'"  | ForEach-Object {Remove-AzureADApplication -ObjectId $_.ObjectId }
+    $apps = Get-AzureADApplication -Filter "DisplayName eq 'TodoListWebApp-aspnet'"
+    if ($apps)
+    {
+        Remove-AzureADApplication -ObjectId $apps.ObjectId
     }
 
-   }
+    foreach ($app in $apps) 
+    {
+        Remove-AzureADApplication -ObjectId $app.ObjectId
+        Write-Host "Removed TodoListWebApp-aspnet.."
+    }
+    # also remove service principals of this app
+    Get-AzureADServicePrincipal -filter "DisplayName eq 'TodoListWebApp-aspnet'" | ForEach-Object {Remove-AzureADServicePrincipal -ObjectId $_.Id -Confirm:$false}
+    
 }
 
 Cleanup -Credential $Credential -tenantId $TenantId

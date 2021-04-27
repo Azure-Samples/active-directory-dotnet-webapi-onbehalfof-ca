@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.ActiveDirectory;
+﻿using Microsoft.Identity.Web.Aspnet;
 using Owin;
-using System.IdentityModel.Tokens;
 
 namespace TodoListService
 {
@@ -14,16 +8,18 @@ namespace TodoListService
         // For more information on configuring authentication, please visit https://go.microsoft.com/fwlink/?LinkId=301864
         public void ConfigureAuth(IAppBuilder app)
         {
-            app.UseWindowsAzureActiveDirectoryBearerAuthentication(
-                new WindowsAzureActiveDirectoryBearerAuthenticationOptions
-                {
-                    Tenant = ConfigurationManager.AppSettings["ida:Tenant"],
-                    TokenValidationParameters = new TokenValidationParameters
-                    {
-                        SaveSigninToken = true,
-                        ValidAudience = ConfigurationManager.AppSettings["ida:Audience"]
-                    }
-                });
+            //app.UseWindowsAzureActiveDirectoryBearerAuthentication(
+            //    new WindowsAzureActiveDirectoryBearerAuthenticationOptions
+            //    {
+            //        Tenant = AuthenticationConfig.TenantId,
+            //        TokenValidationParameters = new TokenValidationParameters
+            //        {
+            //            SaveSigninToken = true,
+            //            ValidAudiences = new [] { AuthenticationConfig.ClientId, $"api://{AuthenticationConfig.ClientId}" },
+            //        }
+            //    });
+
+            app.ProtectWebApiWithMicrosoftIdentity(new JwtBearerOptions());
         }
     }
 }

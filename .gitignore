@@ -108,3 +108,4 @@ Backup*/
 UpgradeLog*.XML
 /.vs/config
 /.vs
+/MigrationBackup/bca3c72c/Microsoft.Identity.Web.Aspnet
