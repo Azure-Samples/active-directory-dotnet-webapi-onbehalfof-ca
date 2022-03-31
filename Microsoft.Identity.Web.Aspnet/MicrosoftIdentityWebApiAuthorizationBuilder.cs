@@ -1,6 +1,8 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using Microsoft.Owin.Security.ActiveDirectory;
 using Owin;
+using System;
+using System.Collections.Generic;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -17,10 +19,12 @@ namespace Microsoft.Identity.Web.Aspnet
                 new WindowsAzureActiveDirectoryBearerAuthenticationOptions
                 {
                     Tenant = webApiConfig.TenantId,
+
                     TokenValidationParameters = new TokenValidationParameters
                     {
                         SaveSigninToken = true,
-                        ValidAudiences = webApiConfig.ValidAudiences
+                        ValidAudiences = webApiConfig.ValidAudiences,
+                        ValidIssuers = CommonUtil.BuildValidIssuers(webApiConfig)
                     }
                 });
         }

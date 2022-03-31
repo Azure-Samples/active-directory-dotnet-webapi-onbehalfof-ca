@@ -17,6 +17,20 @@ namespace Microsoft.Identity.Web.Aspnet
             return authority;
         }
 
+        /// <summary>
+        /// Create valid issuers both for V1.0 and V2.0
+        /// </summary>
+        /// <param name="webApiConfig"></param>
+        /// <returns></returns>
+        public static List<string> BuildValidIssuers(JwtBearerOptions webApiConfig)
+        {
+            return new List<string>
+            {
+                $"{EnsureTrailingSlash(webApiConfig.AADInstance)}{webApiConfig.TenantId}",
+                $"{EnsureTrailingSlash(webApiConfig.AADInstance)}{webApiConfig.TenantId}/v2.0"
+            };
+        }
+
         public static string EnsureTrailingSlash(string value)
         {
             if (value == null)
