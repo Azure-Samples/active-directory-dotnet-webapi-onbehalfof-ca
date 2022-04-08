@@ -1,8 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Validators;
 using Microsoft.Owin.Security.ActiveDirectory;
 using Owin;
-using System;
-using System.Collections.Generic;
 
 namespace Microsoft.Identity.Web.Aspnet
 {
@@ -24,7 +23,9 @@ namespace Microsoft.Identity.Web.Aspnet
                     {
                         SaveSigninToken = true,
                         ValidAudiences = webApiConfig.ValidAudiences,
-                        ValidIssuers = CommonUtil.BuildValidIssuers(webApiConfig)
+                        //ValidIssuers = CommonUtil.BuildValidIssuers(webApiConfig),
+                        ValidateIssuer = true,
+                        IssuerValidator = AadIssuerValidator.GetAadIssuerValidator(new AuthenticationConfig().Authority).Validate
                     }
                 });
         }
