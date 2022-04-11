@@ -23,8 +23,6 @@ namespace Microsoft.Identity.Web.Aspnet
                     {
                         SaveSigninToken = true,
                         ValidAudiences = webApiConfig.ValidAudiences,
-                        //ValidIssuers = CommonUtil.BuildValidIssuers(webApiConfig),
-                        ValidateIssuer = true,
                         IssuerValidator = AadIssuerValidator.GetAadIssuerValidator(new AuthenticationConfig().Authority).Validate
                     }
                 });
