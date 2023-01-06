@@ -73,7 +73,7 @@ namespace TodoListService.Controllers
             } while ((retry == true) && (retryCount < 1));
 
             /*
-             You can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+             You can now use this  access token to access our Conditional-Access protected Web API using On-behalf-of
              Use this code below to call the downstream Web API OBO
              
             string oboAccessToken = result.AccessToken;
@@ -119,7 +119,7 @@ namespace TodoListService.Controllers
         } while ((retry == true) && (retryCount < 1));
 
             /*
-             You can now use this  access token to accesss our Conditional-Access protected Web API using On-behalf-of
+             You can now use this  access token to access our Conditional-Access protected Web API using On-behalf-of
              Use this code below to call the downstream Web API OBO
                 */
             string oboAccessToken = result.AccessToken;
